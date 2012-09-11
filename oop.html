@@ -51,10 +51,10 @@ the root of the object hierarchy, this immediately means that our vtable pointer
 Object. It can&#39;t be, say, at the end of the class since then adding new members would move the vtable
 pointer around and break the LSP.</p>
 
-<p>Conversely, <strong>anything we add to a superclass in the creation of a subclass must appear &quot;beneath&quot; all the data that describes the
+<p>Conversely, <strong>[rule LSP] anything we add to a superclass in the creation of a subclass must appear &quot;beneath&quot; all the data that describes the
 superclass</strong>.</p>
 
-<p>Read that again, it&#39;s important. The strong LSP says we cannot mess, or shift around,
+<p>Read that again, it&#39;s important. The strong LSP says we cannot mess with, or shift around,
 any data that &quot;belongs to&quot; the superclass. That goes for object data but also for vtable data,
 no matter whether it&#39;s stored inside the object or in a separate classinfo structure that the object points to.
 You can do it either way, of course, but I&#39;d strongly recommend using a separate classinfo structure, since it&#39;s pointless
@@ -63,11 +63,11 @@ In any case, the design constraints are the same; however, <strong>for the rest 
 put the vtable in a separate structure and merely include a pointer to it</strong> (since that&#39;s what Neat does).</p>
 
 <p>Since we&#39;re using bold for guiding principles, let&#39;s introduce a second one:
-<strong>No class or interface reference should be larger than one pointer</strong>. No futzing with fat pointers, that just complicates everything.
+<strong>[rule no-fat-pointers]: no class or interface reference should be larger than one pointer</strong>. No futzing with fat pointers, that just complicates everything.
 As we&#39;ll see, it&#39;s not necessary anyway.</p>
 
 <p>And while we&#39;re at it, the third rule:
-<strong>no stub functions, no multiple &quot;versions&quot; of a single function</strong>. They&#39;re ugly, and we&#39;re going for beautiful.</p>
+<strong>[rule no-stubs]: no stub functions, no multiple &quot;versions&quot; of a single function</strong>. They&#39;re ugly, and we&#39;re going for beautiful.</p>
 
 <h2>Let&#39;s leave out interfaces for now.</h2>
 

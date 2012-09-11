@@ -28,10 +28,10 @@ the root of the object hierarchy, this immediately means that our vtable pointer
 Object. It can't be, say, at the end of the class since then adding new members would move the vtable
 pointer around and break the LSP.
 
-Conversely, **anything we add to a superclass in the creation of a subclass must appear "beneath" all the data that describes the
+Conversely, **[rule LSP] anything we add to a superclass in the creation of a subclass must appear "beneath" all the data that describes the
 superclass**.
 
-Read that again, it's important. The strong LSP says we cannot mess, or shift around,
+Read that again, it's important. The strong LSP says we cannot mess with, or shift around,
 any data that "belongs to" the superclass. That goes for object data but also for vtable data,
 no matter whether it's stored inside the object or in a separate classinfo structure that the object points to.
 You can do it either way, of course, but I'd strongly recommend using a separate classinfo structure, since it's pointless
@@ -40,11 +40,11 @@ In any case, the design constraints are the same; however, **for the rest of thi
 put the vtable in a separate structure and merely include a pointer to it** (since that's what Neat does).
 
 Since we're using bold for guiding principles, let's introduce a second one:
-**No class or interface reference should be larger than one pointer**. No futzing with fat pointers, that just complicates everything.
+**[rule no-fat-pointers]: no class or interface reference should be larger than one pointer**. No futzing with fat pointers, that just complicates everything.
 As we'll see, it's not necessary anyway.
 
 And while we're at it, the third rule:
-**no stub functions, no multiple "versions" of a single function**. They're ugly, and we're going for beautiful.
+**[rule no-stubs]: no stub functions, no multiple "versions" of a single function**. They're ugly, and we're going for beautiful.
 
 ## Let's leave out interfaces for now.
 
