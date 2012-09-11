@@ -109,7 +109,7 @@ start with C's vtable, so that the _offset_ of A's interface slot in C is known,
 
 Another diagram!
 
-![slots diagram](slots diagram.png Interface slot allocation diagram)
+![slots diagram](slots diagram.png "Interface slot allocation diagram")
 
 So in summary, the **no-stubs** and **no-fat-pointers** rules force us to call interface functions with object references,
 necessitating the _offset_ member in the vtable, the **strong LSP** forces us to put our class data, interface vtables and slots _after_
