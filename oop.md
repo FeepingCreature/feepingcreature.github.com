@@ -58,7 +58,7 @@ How much does adding interfaces to this model complicate it? The answer is: some
 
 Interfaces are a series of functions that an object must implement. What does an interface reference need to contain?
 It needs to contain some way to get at a function pointer for each interface function that can be called on it, and it
-needs some way to get an object reference to call them with. And all that within one pointer, due to rule 2.
+needs some way to get an object reference to call them with. And all that within one pointer, due to rule "no-fat-pointers".
 
 A brief sidenote: the only sane thing to do is to call interface functions with the **object reference**, not the **interface reference**.
 Why? Interfaces are always implemented in objects; thus, one function may be required to satisfy both interface requirements
