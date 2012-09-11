@@ -81,7 +81,7 @@ etc all the way up to the root of the hierarchy.</p>
 
 <p>Interfaces are a series of functions that an object must implement. What does an interface reference need to contain?
 It needs to contain some way to get at a function pointer for each interface function that can be called on it, and it
-needs some way to get an object reference to call them with. And all that within one pointer, due to rule 2.</p>
+needs some way to get an object reference to call them with. And all that within one pointer, due to rule &quot;no-fat-pointers&quot;.</p>
 
 <p>A brief sidenote: the only sane thing to do is to call interface functions with the <strong>object reference</strong>, not the <strong>interface reference</strong>.
 Why? Interfaces are always implemented in objects; thus, one function may be required to satisfy both interface requirements
