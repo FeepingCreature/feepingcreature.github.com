@@ -111,6 +111,27 @@ Another diagram!
 
 ![slots diagram](slots diagram.png "Interface slot allocation diagram")
 
+So the complete class layout of Class is:
+
+* Object's member data
+* C's interface slot 1
+* C's interface slot 2
+* C's member data
+* Class's interface slot 3
+* Class's member data
+
+And the vtable layout is
+
+* Object's functions
+* C's functions
+* C's slot offset 1
+* C's interface functions 1
+* C's slot offset 2
+* C's interface functions 2
+* Class's functions
+* Class's slot offset 3
+* Class's interface functions 3
+
 So in summary, the **no-stubs** and **no-fat-pointers** rules force us to call interface functions with object references,
 necessitating the _offset_ member in the vtable, the **strong LSP** forces us to put our class data, interface vtables and slots _after_
 our parent's classinfo and class data, and conservation of space forces us to move the vtable into a separate space, as well as

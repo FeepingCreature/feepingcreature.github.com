@@ -137,6 +137,31 @@ start with C&#39;s vtable, so that the <em>offset</em> of A&#39;s interface slot
 
 <p><img src="slots%20diagram.png" alt="slots diagram" title="Interface slot allocation diagram"></p>
 
+<p>So the complete class layout of Class is:</p>
+
+<ul>
+<li>Object&#39;s member data</li>
+<li>C&#39;s interface slot 1</li>
+<li>C&#39;s interface slot 2</li>
+<li>C&#39;s member data</li>
+<li>Class&#39;s interface slot 3</li>
+<li>Class&#39;s member data</li>
+</ul>
+
+<p>And the vtable layout is</p>
+
+<ul>
+<li>Object&#39;s functions</li>
+<li>C&#39;s functions</li>
+<li>C&#39;s slot offset 1</li>
+<li>C&#39;s interface functions 1</li>
+<li>C&#39;s slot offset 2</li>
+<li>C&#39;s interface functions 2</li>
+<li>Class&#39;s functions</li>
+<li>Class&#39;s slot offset 3</li>
+<li>Class&#39;s interface functions 3</li>
+</ul>
+
 <p>So in summary, the <strong>no-stubs</strong> and <strong>no-fat-pointers</strong> rules force us to call interface functions with object references,
 necessitating the <em>offset</em> member in the vtable, the <strong>strong LSP</strong> forces us to put our class data, interface vtables and slots <em>after</em>
 our parent&#39;s classinfo and class data, and conservation of space forces us to move the vtable into a separate space, as well as
