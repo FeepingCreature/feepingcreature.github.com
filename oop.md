@@ -64,14 +64,14 @@ A brief sidenote: the only sane thing to do is to call interface functions with 
 Why? Interfaces are always implemented in objects; thus, one function may be required to satisfy both interface requirements
 and superclass requirements. Since that function _needs_ to take an object reference to correctly satisfy the superclass requirement,
 calling it with interface references in the interface would require generating a stub function to convert interface reference
-to object reference, violating rule 3. So: any function call, class or interface, will always take an object reference.
+to object reference, violating the "no-stubs" rule. So: any function call, class or interface, will always take an object reference.
 
 To extend the strong LSP to interfaces, we will also require that **all interface references
 _are-a_ reference to their first parent interface**, just like objects _are-a_ reference to their superclass. This will
 help us minimize wasted space later.
 
 To fulfill these constraints, we need some way to get from an interface reference to the object reference
-(Strong LSP: all object references to the same object are the same pointer).
+( **Strong LSP**: all object references to the same object are the same pointer).
 This is how we achieve this: when inheriting a class from an interface, we
 
 * put the interface's vtable after the class's vtable
