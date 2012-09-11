@@ -24,7 +24,127 @@
       <section>
 <h2>single-inheritance multiple-interface oop is beautiful</h2>
 
-<p>todo</p>
+<p>C++&#39;s class system is widely held to be somewhat overengineered, what with the multiple
+class inheritance support, protection attributes, diamond pattern, yadda yadda.
+But how much improvement does adopting a single-inheritance multiple-interfaces model such as
+Java and C# (and Neat) actually give us? In this page, I&#39;ll try to explain why using this model
+in combination with <a href="http://en.wikipedia.org/wiki/Liskov_substitution_principle">Liskov&#39;s Substitution Principle</a> (LSP)
+gives rise to a completely unambiguous classinfo/vtable/class layout design that could, in fact, not possibly look any other way.</p>
+
+<p>A quick note: Classes in Neat (and D) are always references. I will assume this for the rest of the text,
+and completely ignore any issues related to objects being mutilated value-types in C++.</p>
+
+<p>tl;dr: &quot;object&quot; means &quot;object reference&quot;. Moving on ..</p>
+
+<h2>LSP</h2>
+
+<p>Let me summarize the idea behind the LSP first.</p>
+
+<p>Liskov&#39;s Principle says, in summary, that class inheritance is a strong &quot;is-a&quot; relationship;
+ie. any object of a subclass also is-an object of the parent class. <code>Apple : Fruit</code> - any apple
+is-a fruit.</p>
+
+<p>Note the difference between <code>is-a</code> and <code>converts-to-using-elaborate-transformation-rules</code>.
+We will interpret the LSP in the strongest form we can - any object of a subclass <em>is also immediately</em>
+an object of all superclasses. Assuming all classes inherit from an Object class that forms
+the root of the object hierarchy, this immediately means that our vtable pointer has to be somewhere in
+Object. It can&#39;t be, say, at the end of the class since then adding new members would move the vtable
+pointer around and break the LSP.</p>
+
+<p>Conversely, <strong>anything we add to a superclass in the creation of a subclass must appear &quot;beneath&quot; all the data that describes the
+superclass</strong>.</p>
+
+<p>Since we&#39;re using bold for guiding principles, let&#39;s introduce a second one right now:
+<strong>No class or interface reference should be larger than one pointer</strong>. No futzing with fat pointers, that just complicates everything.
+As we&#39;ll see, it&#39;s not necessary anyway.</p>
+
+<p>And while we&#39;re at it, the third rule:
+<strong>no stub functions, no multiple &quot;versions&quot; of a single function</strong>. They&#39;re ugly, and we&#39;re going for beautiful.</p>
+
+<p>Read that again, it&#39;s important. The strong LSP says we cannot mess, or shift around,
+any data that &quot;belongs to&quot; the superclass. That goes for object data but also for vtable data,
+no matter whether it&#39;s stored inside the object or in a separate classinfo structure that the object points to.
+You can do it either way, of course, but I&#39;d strongly recommend using a separate classinfo structure, since it&#39;s pointless
+to blow up every object by half a dozen pointers that are gonna be the same for most objects anyway.
+In any case, the design constraints are the same; however, <strong>for the rest of this document, I will assume that you
+put the vtable in a separate structure and merely include a pointer to it</strong> (since that&#39;s what Neat does).</p>
+
+<h2>Let&#39;s leave out interfaces for now.</h2>
+
+<p>Given that, we&#39;re basically done. We just put our new members &quot;underneath&quot; the superclass&#39;s members and our new functions &quot;undearneath&quot;
+the old class&#39;s functions in the vtable, meaning that any object of a class starts with a smaller object of the superclass, which starts with
+etc all the way up to the root of the hierarchy.</p>
+
+<h2>Now interfaces!</h2>
+
+<p>How much does adding interfaces to this model complicate it? The answer is: somewhat, but not very.</p>
+
+<p>Interfaces are a series of functions that an object must implement. What does an interface reference need to contain?
+It needs to contain some way to get at a function pointer for each interface function that can be called on it, and it
+needs some way to get an object reference to call them with. And all that within one pointer, due to rule 2.</p>
+
+<p>A brief sidenote: the only sane thing to do is to call interface functions with the <strong>object reference</strong>, not the <strong>interface reference</strong>.
+Why? Interfaces are always implemented in objects; thus, one function may be required to satisfy both interface requirements
+and superclass requirements. Since that function <em>needs</em> to take an object reference to correctly satisfy the superclass requirement,
+calling it with interface references in the interface would require generating a stub function to convert interface reference
+to object reference, violating rule 3. So: any function call, class or interface, will always take an object reference.</p>
+
+<p>To extend the strong LSP to interfaces, we will also require that <strong>all interface references
+<em>are-a</em> reference to their first parent interface</strong>, just like objects <em>are-a</em> reference to their superclass. This will
+help us minimize wasted space later.</p>
+
+<p>To fulfill these constraints, we need some way to get from an interface reference to the object reference
+(Strong LSP: all object references to the same object are the same pointer).
+This is how we achieve this: when inheriting a class from an interface, we</p>
+
+<ul>
+<li>put the interface&#39;s vtable after the class&#39;s vtable</li>
+<li>put a pointer to the interface&#39;s vtable at the start of our own data</li>
+<li>the interface&#39;s vtable begins with an integer we&#39;ll call <em>offset</em>, which is the offset between that pointer and the start of the object</li>
+<li>* an interface reference is a pointer to the vtable pointer in the object.</li>
+<li>* to call an interface function, use the interface vtable pointer to find the function,
+then subtract the <em>offset</em> from the interface reference to get the class reference to call the interface function with.</li>
+</ul>
+
+<p>Got that?</p>
+
+<p>No, but that&#39;s okay. I got a diagram.</p>
+
+<p><img src="diagram%20layout.png" alt="layout diagram"></p>
+
+<p>Note that the interface can only add functions, not data; so the interface vtable pointer in the class will always be just a pointer
+into the vtable. We will call this pointer an &quot;interface slot&quot;. </p>
+
+<p>Since we&#39;re trying to minimize wasted space, we want to keep the number of required interface slots as low as possible.
+This is where the interface version of the LSP comes in: we only need to add a slot for each <em>additional</em> parent interface.</p>
+
+<p>Example. Consider the following hierarchy:</p>
+
+<pre><code>interface A { }
+interface B { }
+class C : A, B { }
+interface D { }
+interface E : D { }
+class Class : C, E { }
+</code></pre>
+
+<p>Despite the fact that we have four parent interfaces and one parent class to Class, we can get away with a mere three interface slots,
+since E is-a D. Note that C is-<strong>not</strong>-an A in the strict sense, since the primary parent of C is <em>Object</em>, not A. Regardless,
+converting a C to an A is easy, since thanks to strong LSP, any subclass of C will start with the same layout as C, and its vtable will
+start with C&#39;s vtable, so that the <em>offset</em> of A&#39;s interface slot in C is known, regardless of the <em>actual</em> class type of a given C reference.</p>
+
+<p>Another diagram!</p>
+
+<p><img src="slots%20diagram.png%20Interface%20slot%20allocation%20diagram" alt="slots diagram"></p>
+
+<p>So in summary, the <strong>no-stubs</strong> and <strong>no-fat-pointers</strong> rules force us to call interface functions with object references,
+necessitating the <em>offset</em> member in the vtable, the <strong>strong LSP</strong> forces us to put our class data, interface vtables and slots <em>after</em>
+our parent&#39;s classinfo and class data, and conservation of space forces us to move the vtable into a separate space, as well as
+the unambiguous slot layout.</p>
+
+<p>No aspect of this design is arbitrary.</p>
+
+<p>And that&#39;s why it&#39;s the best thing ever.</p>
       </section>
       <footer>
         <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
