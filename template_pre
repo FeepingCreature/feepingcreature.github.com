@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>why single-inheritance multiple-interfaces oop is the most beautiful thing</title>
+    <title>%TITLE%</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
@@ -15,7 +15,7 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>why single-inheritance multiple-interfaces oop is the most beautiful thing</h1>
+        <h1>%TITLE%</h1>
 
 
         <p class="view"><a href="/">back to index</a></p>
