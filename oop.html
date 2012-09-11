@@ -101,8 +101,8 @@ This is how we achieve this: when inheriting a class from an interface, we</p>
 <li>put the interface&#39;s vtable after the class&#39;s vtable</li>
 <li>put a pointer to the interface&#39;s vtable at the start of our own data</li>
 <li>the interface&#39;s vtable begins with an integer we&#39;ll call <em>offset</em>, which is the offset between that pointer and the start of the object</li>
-<li>* an interface reference is a pointer to the vtable pointer in the object.</li>
-<li>* to call an interface function, use the interface vtable pointer to find the function,
+<li>an interface reference is a pointer to the interface vtable pointer in the object (see point 2).</li>
+<li>to call an interface function, use the interface vtable pointer to find the function,
 then subtract the <em>offset</em> from the interface reference to get the class reference to call the interface function with.</li>
 </ul>
 
