@@ -6,7 +6,7 @@ go with segfaults. They're the same thing though.
 
 Second. My code may look like C, but since it's ported from a decidedly not-C language and
 I didn't actually test it to see if it compiles, you should treat it like pseudocode.
-Caveat lexor. (look ma I'm classy)
+Caveat lector. (look ma I'm classy)
 
 Third, a warning. For me, in almost every case of segfaults, they arise due to a null pointer dereference.
 These are basically harmless. However, the remaining cases tend to be _really really destructive_
