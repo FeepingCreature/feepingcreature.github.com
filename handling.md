@@ -1,5 +1,5 @@
 Cleanly recovering from Segfaults under Windows and Linux (32-bit)
-## two brief notes
+## two brief- three. three brief notes.
 
 First. Windows calls 'em access violations, Linux calls 'em segfaults. I'm a linux person, so I'll
 go with segfaults. They're the same thing though.
@@ -7,6 +7,11 @@ go with segfaults. They're the same thing though.
 Second. My code may look like C, but since it's ported from a decidedly not-C language and
 I didn't actually test it to see if it compiles, you should treat it like pseudocode.
 Caveat lexor. (look ma I'm classy)
+
+Third, a warning. For me, in almost every case of segfaults, they arise due to a null pointer dereference.
+These are basically harmless. However, the remaining cases tend to be _really really destructive_
+things like buffer overflows, that can end up corrupting memory basically at random.
+**When you attempt to recover from segfaults, you are playing with fire**. That said, moving on ..
 
 ## the problem
 

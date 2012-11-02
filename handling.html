@@ -22,7 +22,7 @@
 
       </header>
       <section>
-<h2>two brief notes</h2>
+<h2>two brief- three. three brief notes.</h2>
 
 <p>First. Windows calls &#39;em access violations, Linux calls &#39;em segfaults. I&#39;m a linux person, so I&#39;ll
 go with segfaults. They&#39;re the same thing though.</p>
@@ -30,6 +30,11 @@ go with segfaults. They&#39;re the same thing though.</p>
 <p>Second. My code may look like C, but since it&#39;s ported from a decidedly not-C language and
 I didn&#39;t actually test it to see if it compiles, you should treat it like pseudocode.
 Caveat lexor. (look ma I&#39;m classy)</p>
+
+<p>Third, a warning. For me, in almost every case of segfaults, they arise due to a null pointer dereference.
+These are basically harmless. However, the remaining cases tend to be <em>really really destructive</em>
+things like buffer overflows, that can end up corrupting memory basically at random.
+<strong>When you attempt to recover from segfaults, you are playing with fire</strong>. That said, moving on ..</p>
 
 <h2>the problem</h2>
 
