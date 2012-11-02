@@ -86,7 +86,8 @@ on the stack, which naturally grow upwards.</p>
 
 <p>We want the segfault handler to execute arbitrary code without being limited to what the OS
 deems &quot;safe&quot; for handlers. For that, we need to execute a jump to the address of our userspace
-(non-handler) handler function. But we can&#39;t rewrite the callsite.</p>
+(non-handler, though of course the handler is not run in kernel space)
+handler function. But we can&#39;t rewrite the callsite.</p>
 
 <p>We <em>can</em> rewrite the stack. And we have one &quot;ret&quot; instruction available.</p>
 
