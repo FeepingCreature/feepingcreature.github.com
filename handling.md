@@ -1,4 +1,4 @@
-Cleanly recovering from Segfaults under Windows and Linux (32-bit)
+Cleanly recovering from Segfaults under Windows and Linux (32-bit, x86)
 ## two brief- three. three brief notes.
 
 First. Windows calls 'em access violations, Linux calls 'em segfaults. I'm a linux person, so I'll
