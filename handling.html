@@ -36,6 +36,13 @@ These are basically harmless. However, the remaining cases tend to be <em>really
 things like buffer overflows, that can end up corrupting memory basically at random.
 <strong>When you attempt to recover from segfaults, you are playing with fire</strong>. That said, moving on ..</p>
 
+<p>.. Fourth! Despite the fact that this method will result in a valid stackframe chain, it creates a 
+call instruction where none exists in the original executable. Compilers that don&#39;t emit unwind information
+for functions that &quot;can&#39;t&quot; throw (which, I am told, includes C++ at least under Linux) may experience, at best,
+scope destructors not being called and/or variable corruption and at worst, <strong>outright crashes</strong>. For this reason,
+it is recommended to only use this method for error logging on such languages. (thanks Maristic @reddit) Lobby
+your compiler writers to add a flag to treat any pointer dereference as a potential throw site!</p>
+
 <h2>the problem</h2>
 
 <p>Segfault crashes are annoying. Most exceptions can be caught, but segfaults are the archetypal

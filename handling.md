@@ -13,6 +13,13 @@ These are basically harmless. However, the remaining cases tend to be _really re
 things like buffer overflows, that can end up corrupting memory basically at random.
 **When you attempt to recover from segfaults, you are playing with fire**. That said, moving on ..
 
+.. Fourth! Despite the fact that this method will result in a valid stackframe chain, it creates a 
+call instruction where none exists in the original executable. Compilers that don't emit unwind information
+for functions that "can't" throw (which, I am told, includes C++ at least under Linux) may experience, at best,
+scope destructors not being called and/or variable corruption and at worst, **outright crashes**. For this reason,
+it is recommended to only use this method for error logging on such languages. (thanks Maristic @reddit) Lobby
+your compiler writers to add a flag to treat any pointer dereference as a potential throw site!
+
 ## the problem
 
 Segfault crashes are annoying. Most exceptions can be caught, but segfaults are the archetypal
