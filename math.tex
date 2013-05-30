@@ -1,0 +1,86 @@
+How to go from device coordinates back to worldspace in OpenGL (with explanation)
+\documentclass{article}
+\usepackage{hyperref}
+\title{%TITLE%}
+%\author{FeepingCreature}%
+\begin{document}
+So you're writing a 3D engine or somesuch in OpenGL (modern or legacy), and you're not a beginner
+so you know that the worldspace coordinates get transformed using your modelview/projection matrix (which
+we'll treat as one for the purpose of this article) into clip space, which gets transformed by the
+perspective division into normalized device coordinates.
+
+If you don't, go read \url{http://unspecified.wordpress.com/2012/06/21/calculating-the-gluperspective-matrix-and-other-opengl-matrix-maths/}, it's really good.
+
+So you end up with $x$, $y$ and $z$ (depth buffer) values; that is, device coordinates.
+But for some occasions, like shadow mapping or deferred lighting, it's useful to do this transformation
+backwards - going from device coordinates back to worldspace. In this article, I'm going to walk you
+through the math of it.
+
+Let's start with what we have. We start out with our world space position, $world$. \textbf{Note that $world_w$
+is assumed to be 1} - for the rationale, see the article linked above.
+
+We transform it to clip space by multiplying it with our projection/modelview matrix.
+
+$$clip = Matrix\text{ }world$$
+
+Then move on to device coordinates by dividing with $w$.
+
+$$device = clip_{xyz} / clip_w$$
+
+So the problem we face is: given $clip = Matrix\text{ }world$, $device = clip_{xyz} / clip_w$, $world_w = 1$,
+
+and given $device$ as an input and $Matrix$ as a constant, calculate $world$.
+
+Let's walk through it. Invert the first step:
+
+$$Matrix^{-1}\text{ }clip = Matrix^{-1}\text{ }Matrix\text{ }world$$
+$$Matrix^{-1}\text{ }clip = world$$
+
+Now let's see what we can do with the second equation.
+
+$$device = clip_{xyz} / clip_w$$
+
+$$clip_w\text{ }device = clip_{xyz}$$
+
+Let's use this syntax to indicate a 4-vector formed by combining a 3-vector and a fourth number:
+
+$$clip = clip_{xyzw} = (clip_{xyz}, clip_w)$$
+
+substitute $clip_{xyz}$
+
+$$clip = (clip_w\text{ }device, clip_w)$$
+
+insert into our earlier equation
+
+$$Matrix^{-1}\text{ }clip = world$$
+$$Matrix^{-1}\text{ }(clip_w\text{ }device, clip_w) = world$$
+$$Matrix^{-1}\text{ }clip_w\text{ }(device, 1) = world$$
+
+And note that since matrices are linear transforms, we can pull that $clip_w$ in front of the matrix multiply:
+
+$$clip_w\text{ }Matrix^{-1}\text{ }(device, 1) = world$$
+
+So it seems we run into a wall. $clip_w$ is lost, right? Don't give up hope: we haven't used the
+third of our initial givens yet.
+
+$$world_w = 1$$
+
+So let's look at just the $w$ component of that last equation there:
+
+$$clip_w\text{ }\left(Matrix^{-1}\text{ }(device, 1)\right)_w = world_w = 1$$
+
+Divide:
+
+$$clip_w = \frac 1 {\left(Matrix^{-1}\text{ }(device, 1)\right)_w}$$
+
+And insert into the equation that previously gave us trouble:
+
+$$\frac{Matrix^{-1}\text{ }(device, 1)}{\left(Matrix^{-1}\text{ }(device, 1)\right)_w} = world$$
+
+Or in other words:
+
+$$\left(Matrix^{-1}\text{ }(device, 1)\right)_{xyz/w} = world\text{ ... and done.}$$
+
+You've probably seen that equation in shader code before. Well, now you know why.
+
+\end{document}
