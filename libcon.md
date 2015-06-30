@@ -6,15 +6,15 @@ SECTION: Main Protocol
 
 Hi! Welcome to Insert Convention Here. We hope you enjoy your stay and have many productive interactions. For the sake of your and others' enjoyment, here's a set of rules to follow.
 
-Q: Explicit rules? At a libertarian conference?
+Q: Explicit rules? At a libertarian convention?
 
-A: Nothing wrong with rules, _per se_. You're free to follow another set, if you think they're better. And the conference owners are free to escort you out if they disagree. Remember, it's their floor. Don't worry though - there's not much. Think of them more like ... guidelines.
+A: Nothing wrong with rules, _per se_. You're free to follow another set, if you think they're better. And the convention owners are free to escort you out if they disagree. Remember, it's their floor. Don't worry though - there's not much. Think of them more like ... guidelines.
 
 * Don't litter. There's trashcans around the venue. Use them.
 
 * Be considerate. Leave the shared restrooms in the same state as you found them.
 
-* Don't commit any crimes on the conference floor. Don't steal people's stuff.
+* Don't commit any crimes on the convention floor. Don't steal people's stuff.
 
   * If you see somebody committing a crime, please inform a Community Organizer. They'll escalate the matter to venue security as appropriate.
 
@@ -30,13 +30,13 @@ A: Nothing wrong with rules, _per se_. You're free to follow another set, if you
 
 Q: But they're saying offensive things!
 
-A: That's not a question. Joke aside: _just leave the area_. They bought tickets, just like you did. They have a right to their space on the conference floor. If whatever they're saying is offensive to you, you've probably wandered into a socially incompatible area of the conference. Remember: this is their space.
+A: That's not a question. Joke aside: _just leave the area_. They bought tickets, just like you did. They have a right to their space on the convention floor. If whatever they're saying is offensive to you, you've probably wandered into a socially incompatible area of the convention. Remember: this is their space.
 
 * If you've left the area and they're following you, or you feel they're following you, they may be harassing you. Talk to an Organizer. The Organizer will try to ascertain what the problem is, where you should go to find good people to talk to, and where they should go to find good people to talk to.
 
-* If they're still following you, talk to an Organizer again and they'll escalate the problem to a conference owner. The conference owners have the right to kick people out, and are asked to do so if harassment is taking place.
+* If they're still following you, talk to an Organizer again and they'll escalate the problem to a convention owner. The convention owners have the right to kick people out, and are asked to do so if harassment is taking place.
 
-  * Point of principle: Everybody at the conference has bought a ticket. That means they have the right to a certain area around their person. In general: if you were there first, you don't have to move. But if an Organizer[1] tells you that there's nicer people elsewhere, you are strongly recommended to follow their advice.
+  * Point of principle: Everybody at the convention has bought a ticket. That means they have the right to a certain area around their person. In general: if you were there first, you don't have to move. But if an Organizer[1] tells you that there's nicer people elsewhere, you are strongly recommended to follow their advice.
 
 Q: Well, I'm feeling harassed by the things these people are saying!
 
@@ -57,7 +57,7 @@ SECTION: Community Organizers
 
 Q: What's a Community Organizer?
 
-A: Community Organizers (or Organizers) are people who have taken on the obligation to improve the organization of the conference. They can be recognized by the bright orange armbands.
+A: Community Organizers (or Organizers) are people who have taken on the obligation to improve the organization of the convention. They can be recognized by the bright orange armbands.
 
 Q: So what, do they get to kick people out?
 
@@ -65,7 +65,7 @@ A: They don't get to kick people out. They don't get any inherent special rights
 
 Q: So I can ignore them?
 
-A: You are strongly recommended not to. Remember, an Organizer's job is to improve people's conference experience.
+A: You are strongly recommended not to. Remember, an Organizer's job is to improve people's convention experience.
 
 Q: How do I become an Organizer?
 
@@ -79,19 +79,19 @@ Q: But I wanted an armband too!
 
 A: Sorry. For what it's worth, you can get them [for cheap on Amazon.](http://www.amazon.com/Tyvek-Wristbands-orange-Party-Accessory/dp/B001SQOAEW/ref=sr_1_8?keywords=orange+wristband)
 
-A note to conference owners: feel free to decorate your armbands however you see fit.
+A note to convention owners: feel free to decorate your armbands however you see fit.
 
 Addendum: Privacy
 -----------------
 
-The basic assumption is that the conference floor is a public space; there is no expectation of privacy. This is vital to allow evidence-gathering for misbehavior. If you want to create a conference where people can say things without fear of being blackmailed or getting hit with negative repercussions in their career, it is recommended to hand out official GoPros to Organizers, whose storage will be deleted after the Con.
+The basic assumption is that the convention floor is a public space; there is no expectation of privacy. This is vital to allow evidence-gathering for misbehavior. If you want to create a convention where people can say things without fear of being blackmailed or getting hit with negative repercussions in their career, it is recommended to hand out official GoPros to Organizers, whose storage will be deleted after the Con.
 
 Addendum: Psychology
 --------------------
 
 Q: Why orange armbands?
 
-A: Two effects. They create a group of people that is easily recognizeable as "responsible", creating a first-response layer of defense and a natural contact point in case of difficulties, and they create a _distinct, privileged caste of enforcers_ who are united by their shared adherence to a creed, hopefully beyond party lines. It is expected to be understood that when you put on the armband, you stop arguing about politics. It also must be emphasized that being a Community Organizer gives you no special privileges beyond what people choose to give you. However, for the good of the con, it is recommended that conference owners avoid secondguessing their organizers.
+A: Two effects. They create a group of people that is easily recognizeable as "responsible", creating a first-response layer of defense and a natural contact point in case of difficulties, and they create a _distinct, privileged caste of enforcers_ who are united by their shared adherence to a creed, hopefully beyond party lines. It is expected to be understood that when you put on the armband, you stop arguing about politics. It also must be emphasized that being a Community Organizer gives you no special privileges beyond what people choose to give you. However, for the good of the con, it is recommended that convention owners avoid secondguessing their organizers.
 
 Addendum: Philosophy
 --------------------
