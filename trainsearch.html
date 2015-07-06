@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+<script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+$(function() {
+  $(".help").toggle();
+});
+
+var worker;
+
+function searchForDeadlocks() {
+  if (typeof worker !== "undefined") worker.terminate();
+  
+  $("#output").empty();
+  function print(msg) {
+    $("#output").append(msg);
+  }
+  // avoid locking up the interface
+  worker = new Worker("trainsearch.js");
+  worker.onmessage = function(e) { print(e.data); };
+  var pathstr = $("#paths").val();
+  worker.postMessage(pathstr);
+}
+
+</script>
+</head>
+<body>
+<div class="container">
+<h2>Train Search</h2>
+<p>Search for deadlocks in your intersections.</p>
+<div><span onclick='$(".help").toggle();'>Show help</span></div>
+<div class="help">
+<ul>
+<li>Syntax: one line per path through the intersection, of the form: <pre>block1, block2, block3</pre></li>
+<li>
+For instance, a crossing of two rails might look like this:
+<pre>1,10,2
+3,10,4</pre>
+Block numbers can be in any order and discontinuous.
+</li>
+<li>Each line is a path that a train might take through the intersection, passing through blocks as it goes.</li>
+<li>Trains enter each block in sequence, then leave them again, also in sequence.</li>
+<li>The intersection is considered "deadlocked" when none of the trains passing
+through it can move to the next block in their sequence.</li>
+</ul>
+</div>
+<hr>
+<textarea id="paths" rows="10" cols="50">
+2,3
+2,10,11,5
+2,14,9,13,7
+4,5
+4,11,12,7
+4,15,10,14,1
+6,7
+6,12,9,1
+6,16,11,15,3
+</textarea>
+<div>
+<button onclick="searchForDeadlocks();">Search for deadlocks</button>
+<div id="output">
+</div>
+<div style="margin-top: 40px;" id="bottom-spacer"></div>
+</div>
+</div>
+</body>
+</html>
