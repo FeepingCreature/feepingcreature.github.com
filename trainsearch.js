@@ -197,13 +197,15 @@ function searchForDeadlocksFn(pathstr, print) {
       }
       print("<br>");
       print("There were trains, but none of them could move. <b>Failure state.</b><br>");
-      print("The events leading up to this were:<br><ul>");
+      print("The events leading up to this were:<br>");
+      var list_of_events = "<ul>";
       function print_forwards(record) {
         if (record.next) print_forwards(record.next);
-        print("<li>"+record.info(record)+"</li>");
+        list_of_events += "<li>"+record.info(record)+"</li>";
       }
       print_forwards(block_actions);
-      print("</ul><br>");
+      list_of_events += "</ul>";
+      print(list_of_events);
       for (var i = 0; i < train_options.length; ++i) {
         var alternative = train_options[i][0];
         if (alternative.actions.index === alternative.actions.length) continue;
