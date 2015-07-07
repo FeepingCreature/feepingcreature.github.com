@@ -6,6 +6,14 @@ function array_contains(array, value) {
   return false;
 }
 
+function array_flatten(array) {
+  var res = [];
+  for (var i = 0; i < array.length; i++) {
+    res = res.concat(array[i]);
+  }
+  return res;
+}
+
 function assert(test, msg) {
   if (!test) throw new Error("'"+msg+"'");
 }
@@ -16,11 +24,21 @@ function searchForDeadlocksFn(pathstr, print) {
   for (var i = 0; i < lines.length; ++i) {
     var line = lines[i];
     var path = [];
+    var pre_buffer = [];
     var blocks = line.split(",");
     for (var k = 0; k < blocks.length; ++k) {
-      var block = parseInt(blocks[k]);
-      path.push(block);
+      var block = blocks[k];
+      // 1-2-3,4 actually means "claim [1], claim [2,3,4]"
+      // so stick [2,3] in pre_buffer
+      var parts = block.split("-");
+      path.push(pre_buffer.concat([parseInt(parts[0])]));
+      pre_buffer = [];
+      for (var l = 1; l < parts.length; ++l) {
+        pre_buffer.push(parseInt(parts[l]));
+      }
     }
+    // technically an invalid state, but we just assume there's a valid block after this
+    if (pre_buffer.length) path.push(pre_buffer);
     paths.push(path);
   }
   // list of all blocks that a train starts out from
@@ -28,9 +46,10 @@ function searchForDeadlocksFn(pathstr, print) {
   var all_blocks = [];
   for (var i = 0; i < paths.length; ++i) {
     var path = paths[i];
-    if (!array_contains(entry_blocks, path[0])) entry_blocks.push(path[0]);
-    for (var k = 0; k < paths.length; ++k) {
-      if (!array_contains(all_blocks, path[k])) all_blocks.push(path[k]);
+    var flatpath = array_flatten(path);
+    if (!array_contains(entry_blocks, flatpath[0])) entry_blocks.push(flatpath[0]);
+    for (var k = 0; k < flatpath.length; ++k) {
+      if (!array_contains(all_blocks, flatpath[k])) all_blocks.push(flatpath[k]);
     }
   }
   
@@ -39,6 +58,28 @@ function searchForDeadlocksFn(pathstr, print) {
   
   var num_success_states;
   var num_skipped_states;
+  
+  // array of {block, enter} describing the process of a train passing through the intersection
+  var train_flows = [];
+  for (var i = 0; i < paths.length; ++i) {
+    var path = paths[i];
+    var actions = [];
+    // the train tries to enter each block in sequence
+    for (var k = 0; k < path.length; ++k) {
+      actions.push({blocks: path[k], enter: true});
+    }
+    // then it leaves them, again in sequence
+    /* [19:04] <feep> HanziQ: will a train leaving a chained block release all at once? or will it release them as it goes?
+     * [19:04] <HanziQ> feep: as it goes
+     * [19:04] <feep> okay, so it's just entering that's at-once.
+     * [19:04] <feep> thanks.
+     */
+    var flatpath = array_flatten(path);
+    for (var k = 0; k < flatpath.length; ++k) {
+      actions.push({blocks: [flatpath[k]], enter: false});
+    }
+    train_flows.push(actions);
+  }
   
   var block_actions;
   var already_considered = {}; // don't keep checking past states that we'd already considered
@@ -55,7 +96,7 @@ function searchForDeadlocksFn(pathstr, print) {
       current = current.next;
     }
     
-    assert(enter || !is_free, "tried to leave a block that was not entered");
+    assert(enter || !is_free, "tried to leave a block that was not entered - "+block+" was free.");
     if (enter && !is_free) return; // not a viable action
     // modify
     block_actions = {
@@ -86,7 +127,7 @@ function searchForDeadlocksFn(pathstr, print) {
         else statestr += state[i];
     }
     
-    if (typeof already_considered[statestr] === "undefined") {
+     if (typeof already_considered[statestr] === "undefined") {
       // call
       already_considered[statestr] = contFn();
     } else {
@@ -98,22 +139,6 @@ function searchForDeadlocksFn(pathstr, print) {
     block_actions = block_actions.next;
     
     return already_considered[statestr];
-  }
-  
-  // array of {block, enter} describing the process of a train passing through the intersection
-  var train_flows = [];
-  for (var i = 0; i < paths.length; ++i) {
-    var path = paths[i];
-    var actions = [];
-    // the train tries to enter each block in sequence
-    for (var k = 0; k < path.length; ++k) {
-      actions.push({block: path[k], enter: true});
-    }
-    // then it leaves them, again in sequence
-    for (var k = 0; k < path.length; ++k) {
-      actions.push({block: path[k], enter: false});
-    }
-    train_flows.push(actions);
   }
   
   // how to discover deadlocks?
@@ -128,13 +153,14 @@ function searchForDeadlocksFn(pathstr, print) {
         var alternatives = [];
         used_blocks.push(entry_block);
         for (var k = 0; k < train_flows.length; ++k) {
-          if (paths[k][0] === entry_block) {
-            var option = {path: paths[k], actions: train_flows[k].slice()};
+          var flatpath = array_flatten(paths[k]);
+          if (flatpath[0] === entry_block) {
+            var option = {path: flatpath, actions: train_flows[k].slice()};
             option.actions.index = 0;
             alternatives.push(option);
           }
         }
-        assert(alternatives.length > 0);
+        assert(alternatives.length > 0, "no alternatives");
         train_options.push(alternatives);
       }
     }
@@ -177,9 +203,16 @@ function searchForDeadlocksFn(pathstr, print) {
         var actions = alternatives[0].actions;
         if (actions.index === actions.length) continue;
         there_were_trains = true;
-        var block = actions[actions.index].block;
+        var blocks = actions[actions.index].blocks;
         var enter = actions[actions.index].enter;
-        var res = record_action(block, train, enter, function() {
+        // try to record all blocks in this action in one go
+        function recurse(index, innerFn) {
+          if (index == blocks.length) return innerFn();
+          return record_action(blocks[index], train, enter, function() {
+            return recurse(index + 1, innerFn);
+          });
+        }
+        var res = recurse(0, function() {
           actions.index ++;
           for_any_combination(); // recurse again
           actions.index --; // back off
@@ -209,20 +242,20 @@ function searchForDeadlocksFn(pathstr, print) {
       for (var i = 0; i < train_options.length; ++i) {
         var alternative = train_options[i][0];
         if (alternative.actions.index === alternative.actions.length) continue;
-        var block = alternative.actions[alternative.actions.index].block;
+        var blocks = alternative.actions[alternative.actions.index].blocks;
         var responsible;
         var current = block_actions;
         while (typeof current !== "undefined") {
-          if (current.block === block) {
+          if (array_contains(blocks, current.block)) {
             assert(current.enter, "deadlock block is free, what happened here?!");
             responsible = current.train;
             break;
           }
           current = current.next;
         }
-        assert(typeof responsible !== "undefined");
-        print("Train "+(i + 1)+" wants to enter block "
-          +block+" but it's blocked by train "+(responsible + 1)+".<br>");
+        assert(typeof responsible !== "undefined", "nobody responsible");
+        print("Train "+(i + 1)+" wants to enter blocks ["
+          +blocks.join(",")+"] but it's blocked by train "+(responsible + 1)+".<br>");
       }
       assert(false, "found failure state, aborting");
     }
