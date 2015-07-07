@@ -31,20 +31,23 @@ function searchForDeadlocks() {
 <div class="container">
 <h2>Train Search</h2>
 <p>Search for deadlocks in your intersections.</p>
-<div><span onclick='$(".help").toggle();'>Show help</span></div>
+<div><a style="cursor:hand;cursor:pointer;" onclick='$(".help").toggle();'>Click here to see an explanation.</a></div>
 <div class="help">
 <ul>
-<li>Syntax: one line per path through the intersection, of the form: <pre>block1, block2, block3</pre></li>
+<li>The rail system is divided into blocks. A "block" is some area of rail that can be either free or occupied.</li>
+<li>Connected rails have the same block, no matter if they're a fork or a crossing.</li>
+<li>Signals form the borders of blocks.</li>
+<li>Syntax: every line is a path that a train may take through the intersection, passing through blocks as it goes.</li>
 <li>
 For instance, a crossing of two rails might look like this:
 <pre>1,10,2
 3,10,4</pre>
-Block numbers can be in any order and discontinuous.
+Meaning "A train starts out in block 1, drives into block 10 (past a signal), leaves block 10 (past another signal) and exits the intersection at block 2. Simultaneously, another train may start out in block 3, drive into the shared block 10 (past yet another signal), leave it again and exit the intersection at block 4."
 </li>
-<li>Each line is a path that a train might take through the intersection, passing through blocks as it goes.</li>
-<li>Trains enter each block in sequence, then leave them again, also in sequence.</li>
+<li>Block numbers can be in any order. Block numbers can be discontinuous.</li>
+<li>You can use the block numbers from in-game. Simply hold the mouse over a rail signal, and the game will tell you which two blocks it connects.</li>
 <li>The intersection is considered "deadlocked" when none of the trains passing
-through it can move to the next block in their sequence.</li>
+through it can move to the next block in their path.</li>
 </ul>
 </div>
 <hr>
