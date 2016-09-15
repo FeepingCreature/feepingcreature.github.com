@@ -188,7 +188,7 @@ This works fine, until you have to hit a "return" statement, at which point we d
 
 But how does the computer actually know where to return to?
 
-_Simply using the call stack_.
+_It simply uses the call stack_.
 
 Every time the processor prepares a new form, it puts a field at the very top, labelled 'where I came from'. When we hit a return
 statement, and the computer removes the top sheet, it just has to look at this field to remind itself where to go back to.
@@ -201,6 +201,6 @@ telling the computer "continue the execution over there". Everyone knows the cla
 
 This may seem simple, but it has a crippling flaw: you have to keep track of where to keep going in _every_ part of the code.
 
-The invention of the call stack is what allowed us to write code that could work the same way no matter where we called it from.
-It allows us to break up our problems into smaller sub-tasks, that can be reused in all sorts of different places.
-It is the core idea that gave rise to modern programming, and I hope this article helps you understand it better.
+The invention of the notion of a return address is what allowed us to write code that could work the same way no matter
+where we called it from. It allows us to break up our problems into smaller sub-tasks, that can be reused in all sorts
+of different places, and it integrates with the call stack in a very natural way.

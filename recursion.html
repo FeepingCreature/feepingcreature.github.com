@@ -319,7 +319,7 @@ new form (&quot;stackframe&quot;), and fill in its parameters).</p>
 
 <p>But how does the computer actually know where to return to?</p>
 
-<p><em>Simply using the call stack</em>.</p>
+<p><em>It simply uses the call stack</em>.</p>
 
 <p>Every time the processor prepares a new form, it puts a field at the very top, labelled &#39;where I came from&#39;. When we hit a return
 statement, and the computer removes the top sheet, it just has to look at this field to remind itself where to go back to.</p>
@@ -333,9 +333,9 @@ telling the computer &quot;continue the execution over there&quot;. Everyone kno
 
 <p>This may seem simple, but it has a crippling flaw: you have to keep track of where to keep going in <em>every</em> part of the code.</p>
 
-<p>The invention of the call stack is what allowed us to write code that could work the same way no matter where we called it from.
-It allows us to break up our problems into smaller sub-tasks, that can be reused in all sorts of different places.
-It is the core idea that gave rise to modern programming, and I hope this article helps you understand it better.</p>
+<p>The invention of the notion of a return address is what allowed us to write code that could work the same way no matter
+where we called it from. It allows us to break up our problems into smaller sub-tasks, that can be reused in all sorts
+of different places, and it integrates with the call stack in a very natural way.</p>
       </section>
       <footer>
         <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
