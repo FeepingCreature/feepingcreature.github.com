@@ -1,0 +1,293 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>A Whirlwind Introduction to Jerboa</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>A Whirlwind Introduction to Jerboa</h1>
+
+
+        <p class="view"><a href="/">back to index</a></p>
+
+      </header>
+      <section>
+<h1>The Very Basics</h1>
+
+<p>Integers are a thing. <code>2</code>, <code>3</code>, <code>4</code>, <code>5</code>. Integers are 0 to 2^32 and wrap.</p>
+
+<p>Floats! <code>2.0</code>, <code>3.0</code>, <code>4.</code>, etc. 32-bit IEEE floats, the regular.</p>
+
+<p>Bools have two values, <code>true</code> and <code>false</code>.</p>
+
+<p>The value <code>null</code> exists. It is the default value.</p>
+
+<p>Comments are done as in C: <code>/*</code> and <code>*/</code> mark a multiline comment, <code>//</code> marks the rest of the line as a comment.</p>
+
+<p>Math is done by infix operators. The operator precedence is:</p>
+
+<table>
+<thead>
+<tr>
+<th>precedence</th>
+<th>operator</th>
+<th>meaning</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>0</td>
+<td>||</td>
+<td>short-circuit or</td>
+</tr>
+<tr>
+<td>1</td>
+<td>&amp;&amp;</td>
+<td>short-circuit and</td>
+</tr>
+<tr>
+<td>2</td>
+<td>&lt; &gt; &lt;= &gt;= == !=</td>
+<td>comparisons</td>
+</tr>
+<tr>
+<td>3</td>
+<td>+ -</td>
+<td>addition, subtraction</td>
+</tr>
+<tr>
+<td>4</td>
+<td>* / %</td>
+<td>multiplication, division, modulo</td>
+</tr>
+<tr>
+<td>5</td>
+<td>|</td>
+<td>arithmetic or</td>
+</tr>
+<tr>
+<td>6</td>
+<td>&amp;</td>
+<td>arithmetic and</td>
+</tr>
+</tbody>
+</table>
+
+<p>Postfix works, prefix doesn&#39;t. TODO. Also <code>a += b</code> is the same exactly as <code>a = a + b</code>.</p>
+
+<p>Precedence can be enforced with parens, ie. <code>(2 + 3) * 4</code>. Evaluation is left to right.</p>
+
+<p>Functions are expressions. A function is called with <code>fun(param1, param2, param3)</code>.
+This has higher precedence than any infix operation.</p>
+
+<p>Strings are defined using quote marks: <code>&quot;Hello World&quot;</code> or <code>&#39;Hello World&#39;</code>.</p>
+
+<h2>Statements</h2>
+
+<p>A Jerboa file consists of a list of statements.</p>
+
+<p>Expressions are statements. When an expression is to be interpreted as a statement, it must be terminated by a semicolon.</p>
+
+<p>A list of statements enclosed in brackets is a statement: <code>{ statement1; statement2; }</code></p>
+
+<p>Branching is done via the <code>if</code> statement, as in</p>
+
+<pre><code>if (condition) statement;
+</code></pre>
+
+<p>Optionally, an <code>else</code> branch can be added.</p>
+
+<pre><code>if (condition) statement; else statement;
+</code></pre>
+
+<p>While loops and for loops work as in C, analogously.</p>
+
+<pre><code>while (condition) statement;
+for (var i = 0; i &lt; 10; i++) {
+}
+</code></pre>
+
+<p>Loops may be marked using a label:</p>
+
+<pre><code>label:while (condition) statement;
+</code></pre>
+
+<p>When marked as such, <code>break</code> and <code>continue</code> can specify the loop to be broken using <code>break label</code> and <code>continue label</code>.</p>
+
+<h2>Truth</h2>
+
+<p>When evaluating a condition, we test a property called &quot;truthiness&quot; to disambiguate it from the boolean <code>true</code> and <code>false</code> values.</p>
+
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th>truthiness</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>null</td>
+<td>always false</td>
+</tr>
+<tr>
+<td>bool</td>
+<td>true if true, false if false</td>
+</tr>
+<tr>
+<td>int</td>
+<td>true if not zero</td>
+</tr>
+<tr>
+<td>float</td>
+<td>true if not zero</td>
+</tr>
+<tr>
+<td>object</td>
+<td>always true</td>
+</tr>
+</tbody>
+</table>
+
+<p>The &quot;Boolean&quot; operators in Jerboa are a bit unusual. They&#39;re short-circuiting, but operate on values, not bools.</p>
+
+<p><code>a || b</code> has the value of <code>a</code> if <code>a</code> is truthy, else <code>b</code>. If <code>a</code> is truthy, <code>b</code> is not evaluated.</p>
+
+<p><code>a &amp;&amp; b</code> has the value of <code>b</code> if <code>a</code> is truthy, else <code>a</code>. If <code>a</code> is falsy, <code>b</code> is not evaluated.</p>
+
+<p>Boolean logic falls out of this as a special case.</p>
+
+<h1>Variables</h1>
+
+<p>Variables must be declared before they can be used. To declare a variable, simply write <code>var identifier;</code>.
+The variable will start out with the value <code>null</code>. To initialize the variable, write <code>var identifier = value;</code>.
+To assign a value to a variable later, write <code>identifier = value;</code>. You can declare multiple variables at once
+by separating them with commas: <code>var a = 2, b = 3;</code>. Variables are scoped to the current block.</p>
+
+<p>If you declare a variable with <code>const identifier</code> instead of <code>var identifier</code>, its immediate value cannot be changed.</p>
+
+<p>Variable lookup proceeds lexically.</p>
+
+<h1>Objects</h1>
+
+<p>An object is something that contains a bunch of name-value pairs, called &quot;properties&quot;, with each name being unique, as well as a &quot;prototype&quot; or &quot;parent&quot;
+which is another object, which may have its own prototype and so on until you reach an object whose prototype is <code>null</code>.</p>
+
+<p>An object is made using an &quot;object literal&quot;:</p>
+
+<pre><code>var object = {
+  a = 5;
+  b = 6;
+};
+</code></pre>
+
+<p>Note the use of &quot;=&quot; as opposed to &quot;:&quot; in Javascript.</p>
+
+<p>The values of the properties can be accessed with <code>object.a</code>. If a property is not found, the object&#39;s prototype will
+be searched, and then its prototype and so on. Accessing a missing property is an error. To check if a property can be
+accessed, you can use <code>&quot;a&quot; in object</code>, which will be true if <code>object.a</code> succeeds. Accessing a property this way is called
+&quot;access as object&quot;.</p>
+
+<p>To define a new object whose prototype is another object, use <code>new</code>:</p>
+
+<pre><code>var child = new object {
+  c = 5;
+}
+print(child.a); // still works and prints 5 because a is in prototype
+child.a = 8;
+</code></pre>
+
+<p>When you do not want to set any further properties, this works as a shortcut: <code>var child = new object;</code>.</p>
+
+<p><strong>Important</strong>: assigning a value to a property will always set it in the <em>actual object</em>, even
+if the value exists in a prototype.</p>
+
+<p><strong>Also important</strong>: assigning a property that is not in the object yet at all, is an <strong>error</strong>. Defining new properties should
+only be done by defining a new object with the old one as prototype. In case this cannot done, you can use the index operator.</p>
+
+<p>An array is formed by using the an array literal:</p>
+
+<pre><code>var array = [2, 25, 254, 2573];
+</code></pre>
+
+<p>Array values are accessed via the index operator: <code>array[2] == 254</code>, <code>array[3] = -7</code>. Indexes are 0-based. Accessing past the
+end of the array is an error.</p>
+
+<p>Properties can <em>also</em> be accessed via the index operator: <code>object[&quot;a&quot;]</code>. This syntax allows you to use properties that cannot
+be identifiers. It works otherwise exactly the same as object access. The difference lies in assignment: while <code>object.a</code> will
+error if the identifier is not yet in the prototype hierarchy, <code>object[&quot;a&quot;] = 5;</code> will happily define <code>a</code> as a property of <code>object</code>.
+This is called &quot;access as array&quot;.</p>
+
+<h1>Functions</h1>
+
+<p>Functions are expressions with the following syntax: <code>function(parameterlist) statement;</code>.</p>
+
+<p>When assigned to a variable, like <code>var fn = function(a) { };</code>, the following equivalent syntax should be used:</p>
+
+<pre><code>function fn(a) { }
+</code></pre>
+
+<p>The variable will be constant. A terminating semicolon is not required.</p>
+
+<p>When <code>method</code> is used instead of <code>function</code> (as in, <code>method(a) { }</code>), the object that the method is called on is passed in
+as an implicit parameter called <code>this</code>. That is, if the method is called like <code>object.method(5)</code>, then <code>this</code> is set to <code>object</code> inside
+the method.</p>
+
+<p>Code inside a function may access variables declared outside it, even if the surrounding function has already returned. These variables
+will have the values that they had when their containing block ended.</p>
+
+<h1>Type constraints</h1>
+
+<p>Variables and object properties can be &quot;[proto]type constrained&quot; using the following syntax:</p>
+
+<pre><code>var a: int = 5
+var obj = {
+  a: int = 6;
+};
+</code></pre>
+
+<p>When constrained, assigning a value with a different prototype to the variable will cause a runtime error.</p>
+
+<h1>Other stuff</h1>
+
+<p>Since every value is an object, the infix math shown earlier are simply properties of the &quot;int&quot; prototype. That is, <code>2*3+4</code>
+is the same as <code>2[&quot;*&quot;](3)[&quot;+&quot;](4)</code>.</p>
+
+<p>Use <code>instanceof</code> to check if an object has another object as a prototype. To check types of values, simply use
+<code>val instanceof int</code>, <code>float</code> or <code>bool</code>.</p>
+
+<p>Most operations will error if their arguments are missing. To avoid if-heavy code,
+use the &quot;conditional access&quot; operators: <code>a?.b</code>, which is null if <code>a</code> is null or <code>b</code> is not in it, <code>a?[b]</code> likewise, and <code>a?()</code>, which
+is null if <code>a</code> is null and calls it otherwise.</p>
+
+<p>Objects may be marked as &quot;frozen&quot; using <code>Object.freeze(object)</code>. In this state, values of keys in the object may no
+longer be modified through any means.</p>
+
+<p>Objects may be marked as &quot;closed&quot; using <code>Object.close(object)</code>. In this state,
+no new keys may be added to the object.</p>
+
+<p>These states are occasionally useful for optimization. For instance, accesses to a const frozen object
+may be replaced with their values.</p>
+
+<p>Fun trivia: Ints aren&#39;t <em>really</em> objects internally, but they act like closed frozen empty objects for all intents and purposes.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
