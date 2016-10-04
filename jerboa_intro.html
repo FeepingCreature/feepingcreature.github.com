@@ -24,7 +24,7 @@
       <section>
 <h1>The Very Basics</h1>
 
-<p>Integers are a thing. <code>2</code>, <code>3</code>, <code>4</code>, <code>5</code>. Integers are 0 to 2^32 and wrap.</p>
+<p>Integers are a thing. <code>2</code>, <code>3</code>, <code>4</code>, <code>5</code>. Integers are -2^31 to 2^31-1 and wrap.</p>
 
 <p>Floats! <code>2.0</code>, <code>3.0</code>, <code>4.</code>, etc. 32-bit IEEE floats, the regular.</p>
 
@@ -332,6 +332,7 @@ to be more effectively optimized.</p>
 <li><code>string.replace(marker, replacement)</code>: replace <code>marker</code> with <code>replacement</code> in string</li>
 </ul></li>
 <li><code>require(filename)</code>: execute <code>filename</code>, then return the defined variables as an object.</li>
+<li><code>print(arg, arg, arg)</code>: print given values to stdout in an appropriate format. Useful for debugging.</li>
 <li><code>assert(condition, message)</code>: aborts with <code>message</code> if <code>condition</code> is falsy.</li>
 <li><code>Math</code>: maths functions
 

@@ -1,6 +1,6 @@
 A Whirlwind Introduction to Jerboa
 # The Very Basics
-Integers are a thing. `2`, `3`, `4`, `5`. Integers are 0 to 2^32 and wrap.
+Integers are a thing. `2`, `3`, `4`, `5`. Integers are -2^31 to 2^31-1 and wrap.
 
 Floats! `2.0`, `3.0`, `4.`, etc. 32-bit IEEE floats, the regular.
 
