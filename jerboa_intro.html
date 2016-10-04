@@ -180,6 +180,11 @@ by separating them with commas: <code>var a = 2, b = 3;</code>. Variables are sc
 
 <p>Variable lookup proceeds lexically.</p>
 
+<p><strong>Note</strong>: Variable declarations are expressions. That means they can be used like this:</p>
+
+<pre><code>if (var foo = someFunction()) { print(foo); }
+</code></pre>
+
 <h1>Objects</h1>
 
 <p>An object is something that contains a bunch of name-value pairs, called &quot;properties&quot;, with each name being unique, as well as a &quot;prototype&quot; or &quot;parent&quot;
@@ -282,6 +287,72 @@ no new keys may be added to the object.</p>
 may be replaced with their values.</p>
 
 <p>Fun trivia: Ints aren&#39;t <em>really</em> objects internally, but they act like closed frozen empty objects for all intents and purposes.</p>
+
+<h1>Source file management</h1>
+
+<p>To import other files, use the function <code>require(filename)</code>. <code>require(filename)</code> executes the given file,
+using a search path of <code>/usr/share/jerboa</code>, <code>$HOME/.local/share/jerboa</code> (more specifically,
+<a href="https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html">following the XDG spec</a>),
+and then the current directory; it then returns all variables defined in the toplevel as an object.
+Multiple calls to <code>require</code> for the same file will result in the same object being returned.</p>
+
+<p><strong>Note</strong>: when importing libraries, such as <code>var gl = require(&#39;c/opengl.jb&#39;)</code>, it is strongly recommended to make the
+module variable <code>const</code>, as in <code>const gl = require(&#39;c/opengl.jb&#39;)</code>. Doing so allows calls to imported functions
+to be more effectively optimized.</p>
+
+<h1>Standard Functions and Objects</h1>
+
+<ul>
+<li><code>int</code>: prototype of integer values, used for instanceof tests and constraints
+
+<ul>
+<li><code>int.parse()</code> parse string as int</li>
+</ul></li>
+<li><code>float</code>: prototype of floating point values
+
+<ul>
+<li><code>float.toInt()</code> to cast to int</li>
+</ul></li>
+<li><code>bool</code>: prototype of boolean values</li>
+<li><code>function</code>: prototype of function expressions
+
+<ul>
+<li><code>function.apply(this, array)</code>: call a function, with <code>array</code> used for arguments</li>
+<li><code>function.call(this, arg, arg, arg)</code>: call a function, with <code>arg</code> used for arguments</li>
+</ul></li>
+<li><code>string</code>
+
+<ul>
+<li>prototype of strings</li>
+<li><code>string[&quot;+&quot;]</code>: string concatenation is implemented with the addition operator</li>
+<li><code>string.startsWith(fragment)</code>: returns the rest of the string if it starts with <code>fragment</code>, null otherwise</li>
+<li><code>string.endsWith(fragment)</code>: returns the front of the string if it ends with <code>fragment</code>, null otherwise</li>
+<li><code>string.slice(from, to)</code>: return a substring from <code>from</code> to <code>to</code>, 0-based</li>
+<li><code>string.find(marker)</code>: return the offset into the string where <code>marker</code> was found, or <code>-1</code> otherwise</li>
+<li><code>string.replace(marker, replacement)</code>: replace <code>marker</code> with <code>replacement</code> in string</li>
+</ul></li>
+<li><code>require(filename)</code>: execute <code>filename</code>, then return the defined variables as an object.</li>
+<li><code>assert(condition, message)</code>: aborts with <code>message</code> if <code>condition</code> is falsy.</li>
+<li><code>Math</code>: maths functions
+
+<ul>
+<li><code>Math.sin(x)</code>: sine function, domain of 0..2π</li>
+<li><code>Math.cos(x)</code>: cosine function, domain of 0..2π</li>
+<li><code>Math.tan(x)</code>: tangent function, domain of -π/2..π/2</li>
+<li><code>Math.log(x)</code>: natural logarithm</li>
+<li><code>Math.sqrt(x)</code>: square root</li>
+<li><code>Math.pow(base, exp)</code>: exponentiation function</li>
+<li><code>Math.max(arg, ...)</code>: the maximum of its arguments</li>
+<li><code>Math.min(arg, ...)</code>: the minimum of its arguments</li>
+</ul></li>
+<li><code>Object</code>: <strong>Not</strong> the prototype of all objects; merely a collection of useful object-management functions
+
+<ul>
+<li><code>Object.keys(obj)</code>: returns an array of all (string) keys in the object. Array keys are not returned.</li>
+<li><code>Object.freeze(obj)</code>: <em>freezes</em> the object, preventing all future changes of defined values</li>
+<li><code>Object.close(obj)</code>: <em>closes</em> the object, preventing all future definitions of new values</li>
+</ul></li>
+</ul>
       </section>
       <footer>
         <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>

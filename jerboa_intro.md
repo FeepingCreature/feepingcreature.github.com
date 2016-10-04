@@ -90,6 +90,10 @@ If you declare a variable with `const identifier` instead of `var identifier`, i
 
 Variable lookup proceeds lexically.
 
+**Note**: Variable declarations are expressions. That means they can be used like this:
+
+    if (var foo = someFunction()) { print(foo); }
+
 # Objects
 
 An object is something that contains a bunch of name-value pairs, called "properties", with each name being unique, as well as a "prototype" or "parent"
@@ -187,3 +191,50 @@ These states are occasionally useful for optimization. For instance, accesses to
 may be replaced with their values.
 
 Fun trivia: Ints aren't _really_ objects internally, but they act like closed frozen empty objects for all intents and purposes.
+
+# Source file management
+
+To import other files, use the function `require(filename)`. `require(filename)` executes the given file,
+using a search path of `/usr/share/jerboa`, `$HOME/.local/share/jerboa` (more specifically,
+[following the XDG spec](https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)),
+and then the current directory; it then returns all variables defined in the toplevel as an object.
+Multiple calls to `require` for the same file will result in the same object being returned.
+
+**Note**: when importing libraries, such as `var gl = require('c/opengl.jb')`, it is strongly recommended to make the
+module variable `const`, as in `const gl = require('c/opengl.jb')`. Doing so allows calls to imported functions
+to be more effectively optimized.
+
+# Standard Functions and Objects
+
+* `int`: prototype of integer values, used for instanceof tests and constraints
+  * `int.parse()` parse string as int
+* `float`: prototype of floating point values
+  * `float.toInt()` to cast to int
+* `bool`: prototype of boolean values
+* `function`: prototype of function expressions
+  * `function.apply(this, array)`: call a function, with `array` used for arguments
+  * `function.call(this, arg, arg, arg)`: call a function, with `arg` used for arguments
+* `string`
+  * prototype of strings
+  * `string["+"]`: string concatenation is implemented with the addition operator
+  * `string.startsWith(fragment)`: returns the rest of the string if it starts with `fragment`, null otherwise
+  * `string.endsWith(fragment)`: returns the front of the string if it ends with `fragment`, null otherwise
+  * `string.slice(from, to)`: return a substring from `from` to `to`, 0-based
+  * `string.find(marker)`: return the offset into the string where `marker` was found, or `-1` otherwise
+  * `string.replace(marker, replacement)`: replace `marker` with `replacement` in string
+* `require(filename)`: execute `filename`, then return the defined variables as an object.
+* `print(arg, arg, arg)`: print given values to stdout in an appropriate format. Useful for debugging.
+* `assert(condition, message)`: aborts with `message` if `condition` is falsy.
+* `Math`: maths functions
+  * `Math.sin(x)`: sine function, domain of 0..2π
+  * `Math.cos(x)`: cosine function, domain of 0..2π
+  * `Math.tan(x)`: tangent function, domain of -π/2..π/2
+  * `Math.log(x)`: natural logarithm
+  * `Math.sqrt(x)`: square root
+  * `Math.pow(base, exp)`: exponentiation function
+  * `Math.max(arg, ...)`: the maximum of its arguments
+  * `Math.min(arg, ...)`: the minimum of its arguments
+* `Object`: **Not** the prototype of all objects; merely a collection of useful object-management functions
+  * `Object.keys(obj)`: returns an array of all (string) keys in the object. Array keys are not returned.
+  * `Object.freeze(obj)`: _freezes_ the object, preventing all future changes of defined values
+  * `Object.close(obj)`: _closes_ the object, preventing all future definitions of new values
