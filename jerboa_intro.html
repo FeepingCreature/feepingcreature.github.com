@@ -93,6 +93,13 @@ This has higher precedence than any infix operation.</p>
 
 <p>Strings are defined using quote marks: <code>&quot;Hello World&quot;</code> or <code>&#39;Hello World&#39;</code>.</p>
 
+<p>The equality operation <code>==</code> may be overloaded - for instance, <code>2 == 2.0</code>, and arrays are equal if all their elements
+are equal. For identity comparison, which yields true if two objects are <em>identical</em>, that is the same object,
+use the <code>is</code> operator: <code>a is b</code> is true iff <code>a</code> and <code>b</code> are the same object. So for instance, <code>[2] is [2]</code> is false,
+because those are two different array objects.</p>
+
+<p>Note: ints, floats and bools with the same value are always the same object.</p>
+
 <h2>Statements</h2>
 
 <p>A Jerboa file consists of a list of statements.</p>
@@ -275,7 +282,8 @@ is the same as <code>2[&quot;*&quot;](3)[&quot;+&quot;](4)</code>.</p>
 
 <p>Most operations will error if their arguments are missing. To avoid if-heavy code,
 use the &quot;conditional access&quot; operators: <code>a?.b</code>, which is null if <code>a</code> is null or <code>b</code> is not in it, <code>a?[b]</code> likewise, and <code>a?()</code>, which
-is null if <code>a</code> is null and calls it otherwise.</p>
+is null if <code>a</code> is null and calls it otherwise. When a condition fails, the rest of the &quot;property expression&quot; - ie. any chain
+of <code>a.b</code>, <code>a[b]</code> and <code>a(b)</code> - is not evaluated.</p>
 
 <p>Objects may be marked as &quot;frozen&quot; using <code>Object.freeze(object)</code>. In this state, values of keys in the object may no
 longer be modified through any means.</p>
@@ -286,7 +294,7 @@ no new keys may be added to the object.</p>
 <p>These states are occasionally useful for optimization. For instance, accesses to a const frozen object
 may be replaced with their values.</p>
 
-<p>Fun trivia: Ints aren&#39;t <em>really</em> objects internally, but they act like closed frozen empty objects for all intents and purposes.</p>
+<p>Fun trivia: Ints aren&#39;t <em>really</em> objects internally, but they act like closed frozen objects for all intents and purposes.</p>
 
 <h1>Source file management</h1>
 

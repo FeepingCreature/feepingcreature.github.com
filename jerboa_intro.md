@@ -31,6 +31,13 @@ This has higher precedence than any infix operation.
 
 Strings are defined using quote marks: `"Hello World"` or `'Hello World'`.
 
+The equality operation `==` may be overloaded - for instance, `2 == 2.0`, and arrays are equal if all their elements
+are equal. For identity comparison, which yields true if two objects are _identical_, that is the same object,
+use the `is` operator: `a is b` is true iff `a` and `b` are the same object. So for instance, `[2] is [2]` is false,
+because those are two different array objects.
+
+Note: ints, floats and bools with the same value are always the same object.
+
 ## Statements
 
 A Jerboa file consists of a list of statements.
@@ -179,7 +186,8 @@ Use `instanceof` to check if an object has another object as a prototype. To che
 
 Most operations will error if their arguments are missing. To avoid if-heavy code,
 use the "conditional access" operators: `a?.b`, which is null if `a` is null or `b` is not in it, `a?[b]` likewise, and `a?()`, which
-is null if `a` is null and calls it otherwise.
+is null if `a` is null and calls it otherwise. When a condition fails, the rest of the "property expression" - ie. any chain
+of `a.b`, `a[b]` and `a(b)` - is not evaluated.
 
 Objects may be marked as "frozen" using `Object.freeze(object)`. In this state, values of keys in the object may no
 longer be modified through any means.
@@ -190,7 +198,7 @@ no new keys may be added to the object.
 These states are occasionally useful for optimization. For instance, accesses to a const frozen object
 may be replaced with their values.
 
-Fun trivia: Ints aren't _really_ objects internally, but they act like closed frozen empty objects for all intents and purposes.
+Fun trivia: Ints aren't _really_ objects internally, but they act like closed frozen objects for all intents and purposes.
 
 # Source file management
 
