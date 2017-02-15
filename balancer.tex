@@ -14,16 +14,14 @@ This buffer zone usually takes the form of a bunch of chests feeding from a belt
 The basic idea is that we want each chest to fill only if its fullness is less than the average, and empty if its fullness is more than the average.
 
 $$
-DoFill(Chest_n) = Items_n \lt Avg(Items)
-
+DoFill(Chest_n) = Items_n \lt Avg(Items)\\
 DoEmpty(Chest_n) = Items_n \gt Avg(Items)
 $$
 
 Of course, we get into trouble when each chest is equally full - no chest will be fuller than the average. Because of this, it's usually better to build in some leeway:
 
 $$
-DoFill(Chest_n) = Items_n \lt Avg(Items) + 10
-
+DoFill(Chest_n) = Items_n \lt Avg(Items) + 10\\
 DoEmpty(Chest_n) = Items_n \gt Avg(Items) - 10
 $$
 
@@ -43,8 +41,7 @@ The trick is to realize that each inserter condition is itself a comparison, but
 So instead of comparing "A" to "Iron", we can reformulate our comparisons:
 
 $$
-DoFill(Chest_n) = Items_n + (-Avg(Items)) \lt 10
-
+DoFill(Chest_n) = Items_n + (-Avg(Items)) \lt 10\\
 DoEmpty(Chest_n) = Items_n + (-Avg(Items)) \gt -10
 $$
 
