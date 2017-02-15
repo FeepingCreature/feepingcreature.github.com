@@ -21,8 +21,8 @@ $$
 Of course, we get into trouble when each chest is equally full - no chest will be fuller than the average. Because of this, it's usually better to build in some leeway:
 
 $$
-DoFill(Chest_n) = Items_n \lt Avg(Items) + 10\\
-DoEmpty(Chest_n) = Items_n \gt Avg(Items) - 10
+DoFill(Chest_n) = Items_n \lt Avg(Items) + 1\\
+DoEmpty(Chest_n) = Items_n \gt Avg(Items) - 1
 $$
 
 Computing $Avg(Items)$ is fairly easy: we just add together all the chests' contents, by connecting them
@@ -41,15 +41,15 @@ The trick is to realize that each inserter condition is itself a comparison, but
 So instead of comparing "A" to "Iron", we can reformulate our comparisons:
 
 $$
-DoFill(Chest_n) = Items_n + (-Avg(Items)) \lt 10\\
-DoEmpty(Chest_n) = Items_n + (-Avg(Items)) \gt -10
+DoFill(Chest_n) = Items_n + (-Avg(Items)) \lt 1\\
+DoEmpty(Chest_n) = Items_n + (-Avg(Items)) \gt -1
 $$
 
 Each condition has an addition and a comparison, both of which are handled by the inserter itself.
 
 It's easy to get the negative average. Simply divide by the negative number of chests. Then link the
 arithmetic combinator's output to a red network spanning all your inserters, and each inserter also to the
-chest it accesses. Finally, set the filling inserters to $<10$ and the emptying ones to $>-10$.
+chest it accesses. Finally, set the filling inserters to $<1$ and the emptying ones to $>-1$.
 
 \begin{figure}
 \includegraphics{balancer.png}
