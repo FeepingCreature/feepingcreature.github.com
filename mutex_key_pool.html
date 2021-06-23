@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>The "Mutex Key Pool" Data Structure</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>The "Mutex Key Pool" Data Structure</h1>
+
+
+        <p class="view"><a href="/">back to index</a></p>
+
+      </header>
+      <section>
+<h1>The Problem</h1>
+
+<p>How do you efficiently lock access to one row in a large database table?</p>
+
+<h1>What Doesn&#39;t Work</h1>
+
+<ul>
+<li>Allocating a mutex per row doesn&#39;t scale</li>
+<li>I guess if it&#39;s a futex it works?
+
+<ul>
+<li>I think the kernel implementation of futexes is roughly equivalent to what I&#39;m going to suggest anyways.</li>
+</ul></li>
+</ul>
+
+<h1>Mutex Key Pool</h1>
+
+<p>A Mutex Key Pool is a data structure that supports two operations, locking a key and unlocking a key.</p>
+
+<p>A MKP consists of a table of <code>(Key key, Mutex mutex, int pending)</code> and a global lock.</p>
+
+<p>A table row is &quot;free&quot; if <code>pending == 0</code>.</p>
+
+<h3>Lock a key</h3>
+
+<ul>
+<li>Lock the global lock.</li>
+<li>Scan the table for an entry with the key and <code>pending &gt; 0</code>. If found:
+
+<ul>
+<li>increment <code>pending</code></li>
+<li>Store the mutex.</li>
+</ul></li>
+<li>Else scan for a free entry. If found:
+
+<ul>
+<li>set the key to your locking key and <code>pending</code> to 1.</li>
+<li>Store the mutex.</li>
+<li>The search for a free entry can be done simultaneously with the first scan.</li>
+</ul></li>
+<li>Else:
+
+<ul>
+<li>Grow the table by a new row: <code>(key, new Mutex, 1)</code>.</li>
+<li>Store the mutex.</li>
+</ul></li>
+<li>Unlock the global lock</li>
+<li>Lock the stored mutex.</li>
+</ul>
+
+<h3>Unlock a key</h3>
+
+<ul>
+<li>Lock the global lock</li>
+<li>Scan the table for an entry with the key and <code>pending &gt; 0</code>.
+
+<ul>
+<li>This must be found, or you&#39;re freeing an unlocked key.</li>
+<li>Decrement <code>pending</code>.
+
+<ul>
+<li>This may free the row. But it&#39;s okay because we grab
+the mutex before we release the global lock,
+so even if it gets reused, the reuse will only begin once we call unlock.</li>
+</ul></li>
+<li>Store the mutex.</li>
+</ul></li>
+<li>Unlock the global lock</li>
+<li>Unlock the mutex.</li>
+</ul>
+
+<h3>Properties</h3>
+
+<p>It is easy to see that the number of allocated mutexes scales with the number of
+simultaneous locked, rather than total keys.</p>
+
+<p>Furthermore, there is almost never a reallocation after warmup.</p>
+
+<p>Also, it is straightforward to turn the table into a hashmap, gaining <em>O(1)</em> lock/unlock performance.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
