@@ -1,0 +1,204 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Package Managers and the Invalidation Problem</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Package Managers and the Invalidation Problem</h1>
+
+
+        <p class="view"><a href="/">back to index</a></p>
+
+      </header>
+      <section>
+<h1>Package Managers and the Invalidation Problem</h1>
+
+<p>The &quot;invalidation problem&quot; is the question of how package managers, such as npm, pip or gem, should respond
+to the fact that requirements specified in a package may be wrong.</p>
+
+<h2>Terms</h2>
+
+<h3>Semantic Version</h3>
+
+<p>This is a summary of <a href="https://semver.org/">Semantic Versioning 2.0.0</a>.</p>
+
+<p>A &quot;semantic version&quot; or &quot;semver&quot;, is a triple of numbers, such as &quot;1.0.33&quot;. They are called &quot;major version&quot;,
+&quot;minor version&quot; and &quot;patch version&quot;.</p>
+
+<p>The goal of semantic versions is to encode in the version number of a package whether that package can
+<em>substitute</em> for another version. When a package version can substitute for another version, it is called
+&quot;semver compatible.&quot;</p>
+
+<p>The major version indicates incompatible releases, such as fundamental redesigns or removal of deprecations.
+Whenever you break compatibility with previous versions, increment the major version.</p>
+
+<p>A simple number, such as &quot;version 2&quot;, usually means &quot;2.0.0&quot;. For instance,
+&quot;Python 3&quot; vs &quot;Python 2&quot; was a breaking release, and thus incremented the major version. Packages with
+different major versions are <strong>never semver compatible.</strong></p>
+
+<p>The minor version indicates added features. Whenever you add a new feature, increment the minor version.</p>
+
+<p>Packages with different minor versions are semver compatible if the <strong>substituted minor version is greater,</strong>
+so long as the major version is the same.</p>
+
+<p>This is because only features were added, not removed.</p>
+
+<p>The patch version indicates bugfixes. It is likewise semver compatible if the <strong>substituted patch version
+is greater,</strong> so long as the other two are the same.</p>
+
+<h3>Package</h3>
+
+<p>A package is anything, software, definitions, data, that has these two properties:</p>
+
+<ul>
+<li>it exists in one or multiple versions, &quot;releases&quot;.</li>
+<li>it can depend on other packages, or other packages can depend on it.</li>
+</ul>
+
+<p>The requirement of a package is usually one or multiple of:</p>
+
+<ul>
+<li>semver compatible (see above),</li>
+<li>greater than or equal,</li>
+<li>equal,</li>
+<li>unequal,</li>
+<li>smaller.</li>
+</ul>
+
+<p>When would you want to specify an &quot;unequal&quot; or &quot;smaller&quot; requirement? This can happen if a new version
+introduces a bug. For instance, if 2.0.7 of FooSoft was just released but it doesn&#39;t work with your code,
+you may want to add a requirement of <code>&quot;foo-soft&quot;: &quot;&lt;2.0.7&quot;</code>, or <code>&quot;foo-soft&quot;: &quot;!=2.0.7&quot;</code> if you are confident
+that the issue will be fixed in the next version.</p>
+
+<p>A package manager is a tool to select a set of available packages, a &quot;repository&quot;, at various versions,
+and, given a &quot;root package&quot;, assign versions to these packages so that:</p>
+
+<ol>
+<li>Every package that is transitively required by the root package has exactly one version selected.</li>
+<li>All requirements of the selected packages are fulfilled.</li>
+<li>Given 2, all selected versions are as new as possible.</li>
+</ol>
+
+<p>You may note that 3 is underdefined and may admit contradictory resolutions. Different package managers
+solve this problem in different ways, such as erroring, or selecting whichever solution is found first.</p>
+
+<h1>The Invalidation Problem</h1>
+
+<p>This is all fine and good, and generally works well. However, consider the aforementioned FooSoft issue.</p>
+
+<p>We may have started out with a library &quot;BarLib&quot; at version &quot;1.0.3&quot;. At this point, we lived in an optimistic
+utopia in which we thought software bugs were finally behind us, and so selected an open-ended version of
+<code>&quot;foo-soft&quot;: &quot;&gt;=2.0.0&quot;</code>. Now FooSoft 2.0.7 has introduced a bug, which means BarLib is not compatible
+with &quot;2.0.7&quot;. We change the requirement in BarLib&#39;s requirements file to say <code>&quot;foo-soft&quot;: &quot;&gt;=2.0.0 &lt;2.0.7&quot;</code>.
+Then, having fixed a bug, we release this version as 1.0.4.</p>
+
+<p>However, we have now introduced a contradiction!</p>
+
+<p>The newest version of &quot;BarLib&quot; is, deliberately, not compatible with the newest version of FooSoft.
+From the perspective of the package manager, it can either select:</p>
+
+<ul>
+<li>BarLib 1.0.4 with FooSoft 2.0.6</li>
+<li>BarLib 1.0.3 with FooSoft 2.0.7</li>
+</ul>
+
+<p>However, the second assignment is <em>wrong!</em> The whole reason for BarLib 1.0.4 was that FooSoft 2.0.7 didn&#39;t
+work with BarLib.</p>
+
+<p>From the perspective of the package manager, it is impossible to tell these two resolutions apart.</p>
+
+<p>How do we select the right pair of versions? In other words, how can we allow BarLib 1.0.4 to <strong>invalidate</strong>
+its previous, wrong decision to permit all versions of FooSoft?</p>
+
+<p>I can see several possibilities:</p>
+
+<h2>Always Newest</h2>
+
+<p>Always select the newest patch version of everything. If it errors, then it errors.</p>
+
+<p>Upside: Very easy.</p>
+
+<p>Downside: If a package is broken, it&#39;s broken with no way to fix it.</p>
+
+<h2>Always Newest, Restrict In Root</h2>
+
+<p>Always select the newest patch version, unless this contradicts a requirement in the root package.</p>
+
+<p>This allows the user to decide which package resolution is picked. For instance, the user can
+mask BarLib 1.0.4 in the root package if 1.0.3 with 2.0.7 worked fine for them,
+or they can mask FooSoft 2.0.7 and validate BarLib&#39;s change.</p>
+
+<p>Upside: Still pretty easy.</p>
+
+<p>Downside: Requires duplicated active effort in every package that pulls in FooSoft.</p>
+
+<h2>Always Newest, Depth-order</h2>
+
+<p>As we walk the requirement graph breadth-first, we always pick the newest version.
+However, in doing so we may pick up constraints on packages not yet selected.</p>
+
+<p>These constraints are applied to future selections.</p>
+
+<p>For instance, since BarLib 1.0.4 is selected (it&#39;s the newest version), it excludes FooSoft 2.0.7.
+In other words, we &quot;restrict as we go.&quot;</p>
+
+<p>Upside: This is pretty easy to follow if you read along.</p>
+
+<p>Downside: You can end up with contradictory selections. For instance, if a previous package pulled in FooSoft
+at 2.0.7, then BarLib adding the requirement for FooSoft <code>!=2.0.7</code> will cause resolution to fail.</p>
+
+<p>However, we can always fall back on specifying the requirement in the root, which will cause it
+to take priority, same as in the &quot;Restrict from Root&quot; approach. Or if one package is pulling in
+both FooSoft and BarLib, we can fix the issue there.</p>
+
+<h3>Patch overriding</h3>
+
+<p>The requirements for a package are always taken from the latest patch version with the same minor and major.</p>
+
+<p>So the fact that BarLib 1.0.4 was released with a &quot;!=&quot; constraint on FooSoft,
+<em>retroactively invalidates</em> the open-ended requirement in BarLib 1.0.3. BarLib 1.0.3 can still be selected
+by a package that selected <code>&quot;bar-lib&quot;: &quot;=1.0.3&quot;</code> or such, but BarLib 1.0.3 can <em>no longer</em> be selected with
+FooSoft 2.0.7 by any means.</p>
+
+<p>Upside: Even bugs in the requirements file can be patched.</p>
+
+<p>Downside: A resolution that was previously valid can retroactively become invalid. However, arguably
+this happens if the resolution was <em>wrong to begin with,</em> so this can be seen as a feature.</p>
+
+<p>Downside: This is <em>really, really confusing.</em></p>
+
+<h1>Conclusion</h1>
+
+<p>I originally wrote this page to argue for patch overriding, but on writing it I noticed that
+&quot;always newest, depth-order&quot; is just obviously the best approach.</p>
+
+<p>It&#39;s easy to follow and implement and can still always create a successful resolution with
+whatever properties you desire.</p>
+
+<p>It also gets away without any backtracking, which is a common source of extreme slowdowns in
+package managers.</p>
+
+<p>It&#39;s so clearly superior that I threw out several suggested approaches, such as &quot;newer released version
+beats older dependency&quot;, because they were clearly so bad in comparison as to be not worth considering.</p>
+
+<p>Mission accomplished?</p>
+      </section>
+      <footer>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
