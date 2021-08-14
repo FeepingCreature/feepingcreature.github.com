@@ -81,8 +81,8 @@ introduces a bug. For instance, if 2.0.7 of FooSoft was just released but it doe
 you may want to add a requirement of <code>&quot;foo-soft&quot;: &quot;&lt;2.0.7&quot;</code>, or <code>&quot;foo-soft&quot;: &quot;!=2.0.7&quot;</code> if you are confident
 that the issue will be fixed in the next version.</p>
 
-<p>A package manager is a tool to select a set of available packages, a &quot;repository&quot;, at various versions,
-and, given a &quot;root package&quot;, assign versions to these packages so that:</p>
+<p>A package manager is a tool that, given a set of available packages, a &quot;repository&quot;, at various versions,
+and a &quot;root package&quot;, assign versions to packages so that:</p>
 
 <ol>
 <li>Every package that is transitively required by the root package has exactly one version selected.</li>
@@ -162,7 +162,7 @@ at 2.0.7, then BarLib adding the requirement for FooSoft <code>!=2.0.7</code> wi
 to take priority, same as in the &quot;Restrict from Root&quot; approach. Or if one package is pulling in
 both FooSoft and BarLib, we can fix the issue there.</p>
 
-<h3>Patch overriding</h3>
+<h2>Patch overriding</h2>
 
 <p>The requirements for a package are always taken from the latest patch version with the same minor and major.</p>
 

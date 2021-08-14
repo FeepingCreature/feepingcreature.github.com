@@ -54,8 +54,8 @@ introduces a bug. For instance, if 2.0.7 of FooSoft was just released but it doe
 you may want to add a requirement of `"foo-soft": "<2.0.7"`, or `"foo-soft": "!=2.0.7"` if you are confident
 that the issue will be fixed in the next version.
 
-A package manager is a tool to select a set of available packages, a "repository", at various versions,
-and, given a "root package", assign versions to these packages so that:
+A package manager is a tool that, given a set of available packages, a "repository", at various versions,
+and a "root package", assign versions to packages so that:
 
 1. Every package that is transitively required by the root package has exactly one version selected.
 2. All requirements of the selected packages are fulfilled.
@@ -131,7 +131,7 @@ However, we can always fall back on specifying the requirement in the root, whic
 to take priority, same as in the "Restrict from Root" approach. Or if one package is pulling in
 both FooSoft and BarLib, we can fix the issue there.
 
-### Patch overriding
+## Patch overriding
 
 The requirements for a package are always taken from the latest patch version with the same minor and major.
 
