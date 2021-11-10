@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>JSON-RPC is broken: Notification Flooding</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>JSON-RPC is broken: Notification Flooding</h1>
+
+
+        <p class="view"><a href="/">back to index</a></p>
+
+      </header>
+      <section>
+<h1>JSON-RPC is broken</h1>
+
+<p>In this document, I will lay out and attempt to name a fundamental problem with JSON-RPC 2.0 over a TCP connection.</p>
+
+<h1>So we were using JSON-RPC</h1>
+
+<p>JSON-RPC 2.0 to be exact, and for a while, everything was good. But then we started working with EventStore more
+and more, and we ran into a problem.</p>
+
+<p>EventStore is a stream database. Since we&#39;re working in an oddball language (D), we&#39;re connecting via JSON-RPC to
+an EventStore proxy. There are several operations we can take:</p>
+
+<ul>
+<li>read events from a stream</li>
+<li>append events to the end of a stream</li>
+<li>subscribe to be notified when events are added to a stream.</li>
+</ul>
+
+<p>It&#39;s the last one that gave us grief. You see, when you&#39;re subscribing to a stream, you can specify the position
+at which you start reading. So from a JSON-RPC perspective, what you&#39;d see is:</p>
+
+<ul>
+<li>client -&gt; server: Subscribe to &quot;IncomingEvents&quot; at the previous position.</li>
+<li>client &lt;- server: OK.</li>
+<li>client &lt;- server: Notification! A new event has been published.</li>
+<li>client &lt;- server: Notification! A new event has been published.</li>
+<li>client -&gt; server: Append to &quot;OutgoingEvents&quot;: StateChangeCommitted.</li>
+<li>client &lt;- server: OK.</li>
+<li>client &lt;- server: Notification!</li>
+</ul>
+
+<p>You get the idea.</p>
+
+<p>And this works fine. However, say you&#39;re restarting the service after a while. And you&#39;ve missed a lot of events,
+which EventStore can and will shovel out at a prodigous rate.</p>
+
+<p>So you will instead get the following exchange:</p>
+
+<ul>
+<li>client -&gt; server: Subscribe to &quot;IncomingEvents&quot; at the previous position.</li>
+<li>client &lt;- server: OK.</li>
+<li>client &lt;- server: Notification! While you were gone, 19477 events have been published. Here is event 1.</li>
+<li>client &lt;- server: Notification: Here is event 2.</li>
+<li>client &lt;- server: Notification: Here is event 3.</li>
+<li>client -&gt; server: Okay, let me deal with event 1. Append to &quot;OutgoingEvents&quot;: StateChangeCommitted.</li>
+<li>client &lt;- server: Notification: Here is event 4.</li>
+<li>A long time passes.</li>
+<li>client &lt;- server: Notification: Here is event 19477.</li>
+<li>client &lt;- server: OK.</li>
+</ul>
+
+<p>At this point, the client has buffered 19476 events.</p>
+
+<p>Why don&#39;t we simply refuse to accept further events, creating backpressure? Well, look at the previous exchange: if
+we&#39;d stopped accepting notifications at event 10, we would never have gotten the &quot;OK&quot; message, because it&#39;s queued
+after 19467 preceding messages. So our process would have been stuck trying to respond to event 1, forever waiting
+for an answer that never came.</p>
+
+<p>And this is why one of our our services was using 11GB after startup.</p>
+
+<h1>The problem</h1>
+
+<p>I&#39;ll call this problem &quot;Notification Flooding.&quot; It requires three components</p>
+
+<ul>
+<li>A protocol with requests, responses and notifications</li>
+<li>Where responses and notifications are delivered in order</li>
+<li>And notifications cannot be refused.</li>
+</ul>
+
+<p>JSON-RPC 2.0 over a TCP connection fulfills these conditions.</p>
+
+<p>When these parts come together, a client may be forced by the server to buffer an arbitrary amount of data with no
+way to defend itself.</p>
+
+<h1>The solution</h1>
+
+<p>Here are some fixes I considered:</p>
+
+<ul>
+<li>We could change the server to not send more events until we have explicitly acknowledged the previous events.
+
+<ul>
+<li>This effectively reimplements TCP ACK on top of JSON-RPC on top of TCP.</li>
+</ul></li>
+<li>We could just make the server send a single notification saying that 19477 events are available, and have the client
+explicitly request them at its leisure.
+
+<ul>
+<li>But this forces an additional round trip per event, which is at least annoying.</li>
+<li>Arguably this is closest in spirit to how JSON-RPC is supposed to work though.</li>
+</ul></li>
+</ul>
+
+<p>But in the end, I just opened a separate JSON-RPC connection for the subscription. Freed from the need to multiplex
+responses, I could then backpressure it without issue.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
