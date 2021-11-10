@@ -28,7 +28,8 @@
 
 <h1>So we were using JSON-RPC</h1>
 
-<p>JSON-RPC 2.0 to be exact, and for a while, everything was good. But then we started working with EventStore more
+<p><a href="https://www.simple-is-better.org/json-rpc/transport_sockets.html#netstrings">JSON-RPC 2.0 over TPC with netstrings</a>,
+to be exact, and for a while, everything was (more or less) good. But then we started working with EventStore more
 and more, and we ran into a problem.</p>
 
 <p>EventStore is a stream database. Since we&#39;re working in an oddball language (D), we&#39;re connecting via JSON-RPC to
@@ -77,7 +78,7 @@ which EventStore can and will shovel out at a prodigous rate.</p>
 
 <p>Why don&#39;t we simply refuse to accept further events, creating backpressure? Well, look at the previous exchange: if
 we&#39;d stopped accepting notifications at event 10, we would never have gotten the &quot;OK&quot; message, because it&#39;s queued
-after 19467 preceding messages. So our process would have been stuck trying to respond to event 1, forever waiting
+after 19476 preceding messages. So our process would have been stuck trying to respond to event 1, forever waiting
 for an answer that never came.</p>
 
 <p>And this is why one of our our services was using 11GB after startup.</p>
