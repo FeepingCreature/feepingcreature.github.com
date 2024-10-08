@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI vs Brain Energy Efficiency Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1, h2 { color: #333; }
+        input { width: 80px; padding: 2px; font-size: 16px; }
+        .math { font-family: monospace; margin: 10px 0; background-color: #f0f0f0; padding: 5px; }
+        .result { font-weight: bold; color: #0066cc; }
+        .note { background-color: #ffffd0; border: 1px solid #e0e0a0; padding: 10px; margin: 10px 0; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>AI vs Brain Energy Efficiency Calculator</h1>
+
+    <p>Credit goes to Claude 3.5 Sonnet!</p>
+
+    <h2>GPU Calculations:</h2>
+    <p>Let's consider a GPU using <input type="number" id="gpuPower" value="500"> watts and capable of
+    <input type="number" id="gpuTflops" value="350"> TFLOPS (trillion floating-point operations per second) in FP16.</p>
+
+    <p>First, we convert the GPU's performance from TFLOPS to operations per second:</p>
+    <div class="math"><span id="gpuTflops2"></span> TFLOPS * 10^12 = <span id="gpuOpsPerSec" class="result"></span> ops/s</div>
+
+    <p>Then, we calculate operations per hour:</p>
+    <div class="math"><span id="gpuOpsPerSec2"></span> ops/s * 3600 s/hour = <span id="gpuOpsPerHour" class="result"></span> ops/hour</div>
+
+    <p>We convert the GPU's power consumption to kWh:</p>
+    <div class="math"><span id="gpuPower2"></span> W * 1 hour / 1000 = <span id="gpuEnergyKwh" class="result"></span> kWh</div>
+
+    <p>Finally, we calculate the GPU's efficiency in ops/kWh:</p>
+    <div class="math"><span id="gpuOpsPerHour2"></span> ops/hour / <span id="gpuEnergyKwh2"></span> kWh = <span id="gpuOpsPerKwh" class="result"></span> ops/kWh</div>
+
+    <h2>Brain Calculations:</h2>
+    <div class="note">
+        <strong>Note:</strong> The following brain calculations are highly speculative. Expert opinions on how to quantify brain computations vary widely, and the correspondence between biological synaptic activity and artificial neural network operations is not well established. The values used here are simplifications and should be treated as rough estimates for comparative purposes only.
+    </div>
+    <p>The brain has an average of <input type="number" id="brainSynapses" value="100"> trillion synapses. Let's assume each synapse switches
+    <input type="number" id="synapseSwitches" value="10"> times per second and computes a function that corresponds to
+    <input type="number" id="neuralWeights" value="1"> neural-network weight. The brain consumes approximately
+    <input type="number" id="brainPower" value="20"> watts of power.</p>
+
+    <p>We start by calculating the brain's total operations per second:</p>
+    <div class="math"><span id="brainSynapses2"></span> trillion synapses * <span id="synapseSwitches2"></span> switches/s * <span id="neuralWeights2"></span> weight/switch = <span id="brainOpsPerSec" class="result"></span> ops/s</div>
+
+    <p>Then, we calculate operations per hour:</p>
+    <div class="math"><span id="brainOpsPerSec2"></span> ops/s * 3600 s/hour = <span id="brainOpsPerHour" class="result"></span> ops/hour</div>
+
+    <p>We convert the brain's power consumption to kWh:</p>
+    <div class="math"><span id="brainPower2"></span> W * 1 hour / 1000 = <span id="brainEnergyKwh" class="result"></span> kWh</div>
+
+    <p>Finally, we calculate the brain's efficiency in ops/kWh:</p>
+    <div class="math"><span id="brainOpsPerHour2"></span> ops/hour / <span id="brainEnergyKwh2"></span> kWh = <span id="brainOpsPerKwh" class="result"></span> ops/kWh</div>
+
+    <h2>Comparison:</h2>
+    <p>The ratio of brain efficiency to GPU efficiency is:</p>
+    <div class="math"><span id="brainOpsPerKwh2"></span> / <span id="gpuOpsPerKwh2"></span> = <span id="ratio" class="result"></span></div>
+
+    <p>This means the brain is performing <span id="ratioText" class="result"></span> times more operations per kWh than the GPU.</p>
+
+    <script>
+        function updateCalculations() {
+            const gpuPower = parseFloat(document.getElementById('gpuPower').value);
+            const gpuTflops = parseFloat(document.getElementById('gpuTflops').value);
+            const brainSynapses = parseFloat(document.getElementById('brainSynapses').value);
+            const synapseSwitches = parseFloat(document.getElementById('synapseSwitches').value);
+            const neuralWeights = parseFloat(document.getElementById('neuralWeights').value);
+            const brainPower = parseFloat(document.getElementById('brainPower').value);
+
+            // GPU calculations
+            const gpuOpsPerSec = gpuTflops * 1e12;
+            const gpuOpsPerHour = gpuOpsPerSec * 3600;
+            const gpuEnergyKwh = gpuPower / 1000;
+            const gpuOpsPerKwh = gpuOpsPerHour / gpuEnergyKwh;
+
+            // Brain calculations
+            const brainOpsPerSec = brainSynapses * 1e12 * synapseSwitches * neuralWeights;
+            const brainOpsPerHour = brainOpsPerSec * 3600;
+            const brainEnergyKwh = brainPower / 1000;
+            const brainOpsPerKwh = brainOpsPerHour / brainEnergyKwh;
+
+            // Ratio (inverted)
+            const ratio = brainOpsPerKwh / gpuOpsPerKwh;
+
+            // Update all placeholders
+            document.getElementById('gpuTflops2').textContent = gpuTflops;
+            document.getElementById('gpuOpsPerSec').textContent = gpuOpsPerSec.toExponential(2);
+            document.getElementById('gpuOpsPerSec2').textContent = gpuOpsPerSec.toExponential(2);
+            document.getElementById('gpuOpsPerHour').textContent = gpuOpsPerHour.toExponential(2);
+            document.getElementById('gpuOpsPerHour2').textContent = gpuOpsPerHour.toExponential(2);
+            document.getElementById('gpuPower2').textContent = gpuPower;
+            document.getElementById('gpuEnergyKwh').textContent = gpuEnergyKwh.toFixed(3);
+            document.getElementById('gpuEnergyKwh2').textContent = gpuEnergyKwh.toFixed(3);
+            document.getElementById('gpuOpsPerKwh').textContent = gpuOpsPerKwh.toExponential(2);
+            document.getElementById('gpuOpsPerKwh2').textContent = gpuOpsPerKwh.toExponential(2);
+
+            document.getElementById('brainSynapses2').textContent = brainSynapses;
+            document.getElementById('synapseSwitches2').textContent = synapseSwitches;
+            document.getElementById('neuralWeights2').textContent = neuralWeights;
+            document.getElementById('brainOpsPerSec').textContent = brainOpsPerSec.toExponential(2);
+            document.getElementById('brainOpsPerSec2').textContent = brainOpsPerSec.toExponential(2);
+            document.getElementById('brainOpsPerHour').textContent = brainOpsPerHour.toExponential(2);
+            document.getElementById('brainOpsPerHour2').textContent = brainOpsPerHour.toExponential(2);
+            document.getElementById('brainPower2').textContent = brainPower;
+            document.getElementById('brainEnergyKwh').textContent = brainEnergyKwh.toFixed(3);
+            document.getElementById('brainEnergyKwh2').textContent = brainEnergyKwh.toFixed(3);
+            document.getElementById('brainOpsPerKwh').textContent = brainOpsPerKwh.toExponential(2);
+            document.getElementById('brainOpsPerKwh2').textContent = brainOpsPerKwh.toExponential(2);
+
+            document.getElementById('ratio').textContent = ratio.toFixed(2);
+            document.getElementById('ratioText').textContent = ratio.toFixed(2);
+        }
+
+        // Add event listeners to update on input change
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', updateCalculations);
+        });
+
+        // Initial calculation
+        updateCalculations();
+    </script>
+</body>
+</html>
