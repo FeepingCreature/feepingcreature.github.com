@@ -19,15 +19,22 @@
 <body>
     <div id="controls">
         <button id="toggleAnimation">Pause/Play</button>
+        <button id="toggleColor">Toggle Colors</button>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.154.0/three.min.js"></script>
     <script>
+        const GRID_SIZE = 15;
+        const DOT_COUNT = Math.floor(GRID_SIZE * GRID_SIZE * 0.85);
         let isPaused = false;
         let lastUpdateSecond = 0;
-        const GRID_SIZE = 15;
+        let useColors = false;
+        let dotColors = Array(DOT_COUNT).fill().map(() => ({
+            r: Math.random() * 0.5 + 0.4,  // Pastel red
+            g: Math.random() * 0.5 + 0.4,  // Pastel green
+            b: Math.random() * 0.5 + 0.4   // Pastel blue
+        }));
         const CELL_SIZE = 2;
         const CELLS_PER_ROW = Math.ceil(GRID_SIZE / CELL_SIZE);
-        const DOT_COUNT = Math.floor(GRID_SIZE * GRID_SIZE * 0.85);
         const MOVE_CHANCE = 0.1;
 
         let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(-1));
@@ -79,7 +86,9 @@
                 uCellSize: { value: CELL_SIZE },
                 uCellsPerRow: { value: CELLS_PER_ROW },
                 uSpatialGrid: { value: [] },
-                uSpatialCounts: { value: [] }
+                uSpatialCounts: { value: [] },
+                uDotColors: { value: [] },
+                uUseColors: { value: false }
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -96,6 +105,8 @@
                 uniform int uCellsPerRow;
                 uniform int uSpatialGrid[${CELLS_PER_ROW * CELLS_PER_ROW * 20}];
                 uniform int uSpatialCounts[${CELLS_PER_ROW * CELLS_PER_ROW}];
+                uniform vec3 uDotColors[${DOT_COUNT}];
+                uniform bool uUseColors;
                 varying vec2 vUv;
 
                 float euclideanDistance(vec2 p1, vec2 p2) {
@@ -118,6 +129,7 @@
 
                     float closest = 1000.0;
                     float secondClosest = 1000.0;
+                    int closestDotIndex = -1;
 
                     for(int dy = -1; dy <= 1; dy++) {
                         for(int dx = -1; dx <= 1; dx++) {
@@ -140,6 +152,7 @@
                                 if (dist < closest) {
                                     secondClosest = closest;
                                     closest = dist;
+                                    closestDotIndex = dotIndex;
                                 } else if (dist < secondClosest) {
                                     secondClosest = dist;
                                 }
@@ -154,7 +167,12 @@
                         + ring(0.2, edgeDist, 0.02)
                         + ring(0.4, edgeDist, 0.02);
 
-                    vec3 color = vec3(dots + rings);
+                    vec3 color;
+                    if (uUseColors && closestDotIndex >= 0) {
+                        color = uDotColors[closestDotIndex] * (dots + rings);
+                    } else {
+                        color = vec3(dots + rings);
+                    }
                     gl_FragColor = vec4(color, 1.0);
                 }
             `
@@ -263,6 +281,16 @@
 
             material.uniforms.uSpatialGrid.value = spatialIndices;
             material.uniforms.uSpatialCounts.value = spatialCounts;
+            
+            // Update colors
+            const colors = new Float32Array(DOT_COUNT * 3);
+            for(let i = 0; i < dotColors.length; i++) {
+                colors[i * 3] = dotColors[i].r;
+                colors[i * 3 + 1] = dotColors[i].g;
+                colors[i * 3 + 2] = dotColors[i].b;
+            }
+            material.uniforms.uDotColors.value = colors;
+            material.uniforms.uUseColors.value = useColors;
 
             renderer.render(scene, camera);
         }
@@ -286,6 +314,10 @@
 
         document.getElementById('toggleAnimation').addEventListener('click', () => {
             isPaused = !isPaused;
+        });
+
+        document.getElementById('toggleColor').addEventListener('click', () => {
+            useColors = !useColors;
         });
 
         animate();
