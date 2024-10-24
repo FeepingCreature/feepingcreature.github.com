@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Optimized Voronoi Animation</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="toggleAnimation">Pause/Play</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.154.0/three.min.js"></script>
+    <script>
+        let isPaused = false;
+        let lastUpdateSecond = 0;
+        const GRID_SIZE = 15;
+        const CELL_SIZE = 2;
+        const CELLS_PER_ROW = Math.ceil(GRID_SIZE / CELL_SIZE);
+        const DOT_COUNT = Math.floor(GRID_SIZE * GRID_SIZE * 0.85);
+        const MOVE_CHANCE = 0.1;
+
+        let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(-1));
+        let dots = [];
+        let spatialGrid = Array(CELLS_PER_ROW).fill().map(() =>
+            Array(CELLS_PER_ROW).fill().map(() => []));
+
+        function updateSpatialGrid() {
+            spatialGrid.forEach(row => row.forEach(cell => cell.length = 0));
+            dots.forEach((dot, index) => {
+                const cellX = Math.floor(dot.x / CELL_SIZE);
+                const cellY = Math.floor(dot.y / CELL_SIZE);
+                if (cellX >= 0 && cellX < CELLS_PER_ROW &&
+                    cellY >= 0 && cellY < CELLS_PER_ROW) {
+                    spatialGrid[cellY][cellX].push(index);
+                }
+            });
+        }
+
+        for(let i = 0; i < DOT_COUNT; i++) {
+            let x, y;
+            do {
+                x = Math.floor(Math.random() * GRID_SIZE);
+                y = Math.floor(Math.random() * GRID_SIZE);
+            } while(grid[y][x] !== -1);
+
+            grid[y][x] = i;
+            dots.push({
+                x: x,
+                y: y,
+                targetX: x,
+                targetY: y,
+                moving: false
+            });
+        }
+        updateSpatialGrid();
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0.0 },
+                uResolution: { value: new THREE.Vector2() },
+                uDots: { value: [] },
+                uCellSize: { value: CELL_SIZE },
+                uCellsPerRow: { value: CELLS_PER_ROW },
+                uSpatialGrid: { value: [] },
+                uSpatialCounts: { value: [] }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec2 uResolution;
+                uniform float uTime;
+                uniform vec2 uDots[${DOT_COUNT}];
+                uniform float uCellSize;
+                uniform int uCellsPerRow;
+                uniform int uSpatialGrid[${CELLS_PER_ROW * CELLS_PER_ROW * 20}];
+                uniform int uSpatialCounts[${CELLS_PER_ROW * CELLS_PER_ROW}];
+                varying vec2 vUv;
+
+                float euclideanDistance(vec2 p1, vec2 p2) {
+                    vec2 diff = p1 - p2;
+                    return sqrt(diff.x * diff.x + diff.y * diff.y);
+                }
+
+                float ring(float r, float x, float range) {
+                    if (x < r - range) return 0.0;
+                    if (x < r) return smoothstep(r - range, r, x);
+                    if (x < r + range) return 1.0 - smoothstep(r, r + range, x);
+                    return 0.0;
+                }
+
+                void main() {
+                    vec2 uv = vUv * ${GRID_SIZE}.0;
+
+                    int cellX = int(floor(uv.x / uCellSize));
+                    int cellY = int(floor(uv.y / uCellSize));
+
+                    float closest = 1000.0;
+                    float secondClosest = 1000.0;
+
+                    for(int dy = -1; dy <= 1; dy++) {
+                        for(int dx = -1; dx <= 1; dx++) {
+                            int nx = cellX + dx;
+                            int ny = cellY + dy;
+
+                            if (nx < 0 || nx >= uCellsPerRow ||
+                                ny < 0 || ny >= uCellsPerRow) continue;
+
+                            int cellIndex = ny * uCellsPerRow + nx;
+                            int dotCount = uSpatialCounts[cellIndex];
+                            int baseIndex = cellIndex * 20;
+
+                            for(int i = 0; i < 20; i++) {
+                                if (i >= dotCount) break;
+
+                                int dotIndex = uSpatialGrid[baseIndex + i];
+                                float dist = euclideanDistance(uv, uDots[dotIndex]);
+
+                                if (dist < closest) {
+                                    secondClosest = closest;
+                                    closest = dist;
+                                } else if (dist < secondClosest) {
+                                    secondClosest = dist;
+                                }
+                            }
+                        }
+                    }
+
+                    float edgeDist = (secondClosest - closest) * 0.5;
+
+                    float dots = ring(0.05, closest, 0.02);
+                    float rings = ring(0.05, edgeDist, 0.02)
+                        + ring(0.2, edgeDist, 0.02)
+                        + ring(0.4, edgeDist, 0.02);
+
+                    vec3 color = vec3(dots + rings);
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `
+        });
+
+        const plane = new THREE.PlaneGeometry(2, 2);
+        const mesh = new THREE.Mesh(plane, material);
+        scene.add(mesh);
+
+        camera.position.z = 1;
+
+        const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+        function tryMoveToEmpty(x, y, nextGrid, movedSpots) {
+            if (grid[y][x] !== -1) return false;
+
+            for (let [dx, dy] of directions) {
+                const nx = x + dx;
+                const ny = y + dy;
+
+                if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) continue;
+                if (grid[ny][nx] === -1) continue;
+                if (movedSpots.has(`${ny},${nx}`)) continue;
+                if (Math.random() > MOVE_CHANCE) continue;
+
+                const dotIndex = grid[ny][nx];
+
+                nextGrid[y][x] = dotIndex;
+                nextGrid[ny][nx] = -1;
+                movedSpots.add(`${ny},${nx}`);
+
+                dots[dotIndex].targetX = x;
+                dots[dotIndex].targetY = y;
+                dots[dotIndex].moving = true;
+
+                return true;
+            }
+            return false;
+        }
+
+        function updateDotPositions() {
+            const nextGrid = grid.map(row => [...row]);
+            const movedSpots = new Set();
+
+            for(let y = 0; y < GRID_SIZE; y++) {
+                for(let x = 0; x < GRID_SIZE; x++) {
+                    tryMoveToEmpty(x, y, nextGrid, movedSpots);
+                }
+            }
+
+            grid = nextGrid;
+            updateSpatialGrid();
+        }
+
+        function interpolateDotPositions() {
+            const lerpFactor = 0.1;
+            for(let dot of dots) {
+                if (!dot.moving) continue;
+
+                dot.x += (dot.targetX - dot.x) * lerpFactor;
+                dot.y += (dot.targetY - dot.y) * lerpFactor;
+
+                if (Math.abs(dot.x - dot.targetX) < 0.01 &&
+                    Math.abs(dot.y - dot.targetY) < 0.01) {
+                    dot.x = dot.targetX;
+                    dot.y = dot.targetY;
+                    dot.moving = false;
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (isPaused) return;
+
+            const currentSecond = Math.floor(Date.now() / 1000);
+            if (currentSecond !== lastUpdateSecond) {
+                updateDotPositions();
+                lastUpdateSecond = currentSecond;
+            }
+
+            interpolateDotPositions();
+
+            material.uniforms.uTime.value = Date.now() / 1000;
+            material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+
+            const positions = new Float32Array(DOT_COUNT * 2);
+            for(let i = 0; i < dots.length; i++) {
+                positions[i * 2] = dots[i].x;
+                positions[i * 2 + 1] = dots[i].y;
+            }
+            material.uniforms.uDots.value = positions;
+
+            const spatialIndices = new Int32Array(CELLS_PER_ROW * CELLS_PER_ROW * 20);
+            const spatialCounts = new Int32Array(CELLS_PER_ROW * CELLS_PER_ROW);
+
+            spatialGrid.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    const cellIndex = y * CELLS_PER_ROW + x;
+                    spatialCounts[cellIndex] = Math.min(cell.length, 20);
+                    cell.slice(0, 20).forEach((dotIndex, i) => {
+                        spatialIndices[cellIndex * 20 + i] = dotIndex;
+                    });
+                });
+            });
+
+            material.uniforms.uSpatialGrid.value = spatialIndices;
+            material.uniforms.uSpatialCounts.value = spatialCounts;
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            const aspect = window.innerWidth / window.innerHeight;
+            if (aspect > 1) {
+                camera.left = -aspect;
+                camera.right = aspect;
+                camera.top = 1;
+                camera.bottom = -1;
+            } else {
+                camera.left = -1;
+                camera.right = 1;
+                camera.top = 1/aspect;
+                camera.bottom = -1/aspect;
+            }
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        document.getElementById('toggleAnimation').addEventListener('click', () => {
+            isPaused = !isPaused;
+        });
+
+        animate();
+    </script>
+</body>
+</html>
