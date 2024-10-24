@@ -232,18 +232,23 @@
         }
 
         function interpolateDotPositions() {
-            const lerpFactor = 0.1;
+            const speed = 0.1; // Units per frame
             for(let dot of dots) {
                 if (!dot.moving) continue;
 
-                dot.x += (dot.targetX - dot.x) * lerpFactor;
-                dot.y += (dot.targetY - dot.y) * lerpFactor;
-
-                if (Math.abs(dot.x - dot.targetX) < 0.01 &&
-                    Math.abs(dot.y - dot.targetY) < 0.01) {
+                const dx = dot.targetX - dot.x;
+                const dy = dot.targetY - dot.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance <= speed) {
                     dot.x = dot.targetX;
                     dot.y = dot.targetY;
                     dot.moving = false;
+                } else {
+                    const dirX = dx / distance;
+                    const dirY = dy / distance;
+                    dot.x += dirX * speed;
+                    dot.y += dirY * speed;
                 }
             }
         }
