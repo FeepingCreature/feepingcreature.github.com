@@ -20,14 +20,18 @@
     <div id="controls">
         <button id="toggleAnimation">Pause/Play</button>
         <button id="toggleColor">Toggle Colors</button>
+        <button id="toggleWildMode">Wild Mode</button>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.154.0/three.min.js"></script>
     <script>
         const GRID_SIZE = 15;
         const DOT_COUNT = Math.floor(GRID_SIZE * GRID_SIZE * 0.85);
         let isPaused = false;
-        let lastUpdateSecond = 0;
+        let lastUpdateTime = 0;
         let useColors = false;
+        let isWildMode = false;
+        const WILD_MODE_INTERVAL = 50; // milliseconds
+        const WILD_MODE_DOT_RATIO = 0.2;
         let dotColors = Array(DOT_COUNT).fill().map(() => ({
             r: Math.random() * 0.5 + 0.4,  // Pastel red
             g: Math.random() * 0.5 + 0.4,  // Pastel green
@@ -248,10 +252,28 @@
             requestAnimationFrame(animate);
             if (isPaused) return;
 
-            const currentSecond = Math.floor(Date.now() / 1000);
-            if (currentSecond !== lastUpdateSecond) {
-                updateDotPositions();
-                lastUpdateSecond = currentSecond;
+            const currentTime = Date.now();
+            if (isWildMode) {
+                if (currentTime - lastUpdateTime >= WILD_MODE_INTERVAL) {
+                    // In wild mode, only move a small subset of dots
+                    const dotsToMove = Math.max(1, Math.floor(DOT_COUNT * WILD_MODE_DOT_RATIO));
+                    for (let i = 0; i < dotsToMove; i++) {
+                        const x = Math.floor(Math.random() * GRID_SIZE);
+                        const y = Math.floor(Math.random() * GRID_SIZE);
+                        const nextGrid = grid.map(row => [...row]);
+                        const movedSpots = new Set();
+                        tryMoveToEmpty(x, y, nextGrid, movedSpots);
+                        grid = nextGrid;
+                    }
+                    updateSpatialGrid();
+                    lastUpdateTime = currentTime;
+                }
+            } else {
+                const currentSecond = Math.floor(currentTime / 1000);
+                if (currentSecond !== Math.floor(lastUpdateTime / 1000)) {
+                    updateDotPositions();
+                    lastUpdateTime = currentTime;
+                }
             }
 
             interpolateDotPositions();
@@ -318,6 +340,11 @@
 
         document.getElementById('toggleColor').addEventListener('click', () => {
             useColors = !useColors;
+        });
+
+        document.getElementById('toggleWildMode').addEventListener('click', () => {
+            isWildMode = !isWildMode;
+            lastUpdateTime = Date.now();
         });
 
         animate();
